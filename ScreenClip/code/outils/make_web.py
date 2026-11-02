@@ -1,3 +1,4 @@
+import base64
 import gzip
 import re
 from pathlib import Path
@@ -21,6 +22,8 @@ def gifenc():
 
 def main():
     body = (WEB / "index.html").read_text(encoding="utf-8").replace("/*GIFENC*/", gifenc())
+    font = base64.b64encode((WEB / "vt323.woff2").read_bytes()).decode("ascii")
+    body = body.replace("/*VT323*/", font)
     DEMO.write_text(body, encoding="utf-8")
     page = ('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" '
             'content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>' + body + "</body></html>")

@@ -1,49 +1,50 @@
 <title>Mes écrans Screenclip</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
+@font-face{font-family:"VT323";src:url(data:font/woff2;base64,/*VT323*/) format("woff2");font-display:block}
 /* Une page d'application au pouce : pile de barrettes, action principale fixée en bas. */
 :root{--bg:#fff0f6;--surface:#fff;--ink:#0b4a3a;--muted:#3f6f60;--line:#f6d3e2;--accent:#d81b78;--on-accent:#fff;--pick:#0b4a3a;--on-pick:#fff;--soft:#d9f7e8;--danger:#b3126a;
---font:ui-rounded,"SF Pro Rounded",-apple-system,"Roboto","Segoe UI",sans-serif}
+--font:"VT323",ui-monospace,Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font:400 17px/1.4 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font:400 21px/1.25 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
 main{max-width:520px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px;display:flex;flex-direction:column;gap:16px}
-h1{font-size:30px;line-height:1.15;margin:0;font-weight:800;text-wrap:balance}
-h2{font-size:15px;margin:0 0 8px;font-weight:700}
+h1{font-size:40px;line-height:1.1;margin:0;font-weight:400;text-wrap:balance}
+h2{font-size:21px;margin:0 0 8px;font-weight:400}
 p{margin:0}.muted{color:var(--muted)}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
 button:focus-visible,textarea:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
 .top{display:flex;align-items:center;gap:8px;min-height:44px}
 .back{width:44px;height:44px;margin-left:-10px;font-size:26px;line-height:1;border-radius:50%}
-.demo{background:var(--soft);padding:10px 12px;border-radius:12px;font-size:15px}
+.demo{background:var(--soft);padding:10px 12px;border-radius:12px}
 .clip{border-radius:14px;aspect-ratio:41/16;width:100%;max-width:100%;position:relative;overflow:hidden}
 .clip canvas,.clip img{display:block;width:100%;height:100%;object-fit:cover}
 .clip canvas{touch-action:none}
 #list{display:flex;flex-direction:column;gap:14px}
 .item{position:relative}
-.del{position:absolute;right:8px;top:8px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:15px;font-weight:600}
+.del{position:absolute;right:8px;top:8px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:20px}
 .empty{text-align:center;padding:36px 16px;border:2px dashed var(--line);border-radius:20px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .bar>div{max-width:488px;margin:0 auto;display:flex;gap:10px}
-.main{flex:1;min-height:54px;border-radius:16px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:18px}
+.main{flex:1;min-height:54px;border-radius:16px;background:var(--accent);color:var(--on-accent);font-size:24px}
 .main:disabled{opacity:.5}
 .choice{display:grid;gap:12px}
 .card{text-align:left;width:100%;background:var(--surface);padding:18px;border-radius:18px;border:1px solid var(--line);display:block}
-.card b{display:block;font-size:19px}
+.card b{display:block;font-size:26px;font-weight:400}
 textarea{width:100%;min-height:84px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{min-height:44px;padding:0 14px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
-.chip[aria-pressed="true"]{background:var(--pick);border-color:var(--pick);color:var(--on-pick);font-weight:700}
+.chip[aria-pressed="true"]{background:var(--pick);border-color:var(--pick);color:var(--on-pick)}
 .swatch{width:44px;height:44px;border-radius:50%;border:1px solid var(--line)}
 .swatch[aria-pressed="true"]{outline:3px solid var(--pick);outline-offset:2px}
 input[type=range]{width:100%;height:44px;accent-color:var(--accent)}
 .overlay{position:fixed;inset:0;background:rgba(10,5,18,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:5}
 .box{background:var(--surface);border-radius:20px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px}
 .box .row{display:flex;gap:10px}
-.box button{flex:1;min-height:48px;border-radius:14px;background:var(--bg);font-weight:600}
+.box button{flex:1;min-height:48px;border-radius:14px;background:var(--bg)}
 .box .danger{background:var(--danger);color:var(--surface)}
 progress{width:100%;height:10px;accent-color:var(--accent)}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));max-width:488px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;text-align:center;z-index:4}
@@ -171,7 +172,7 @@ async function send(blob){
 
 /* Texte */
 const COLORS=['#ffffff','#0b4a3a','#ff2892','#fff0f6','#19c37d','#ffd23f','#3b82f6','#8b5cf6'];
-const FONTS=[['Simple','800 %px -apple-system,Roboto,sans-serif'],['Élégante','italic 700 %px Georgia,"Noto Serif",serif'],['Machine','700 %px ui-monospace,Menlo,"Roboto Mono",monospace']];
+const FONTS=[['Pixel','400 %px VT323,monospace'],['Simple','800 %px -apple-system,Roboto,sans-serif'],['Élégante','italic 700 %px Georgia,"Noto Serif",serif'],['Machine','700 %px ui-monospace,Menlo,"Roboto Mono",monospace']];
 const ANIMS=[['fixe','Fixe'],['defile','Défilement'],['clignote','Clignotement'],['machine','Machine à écrire']];
 const T={text:'Coucou !',anim:'fixe',font:0,fg:'#ffffff',bg:'#ff2892'};
 const fontOf=(s,px)=>FONTS[s.font][1].replace('%',px);
@@ -255,8 +256,9 @@ $('action').onclick=async()=>{
 
 /* Démarrage */
 (async()=>{
+ try{await document.fonts.load('32px VT323')}catch(e){}
  go('vHome');$('demoNote').hidden=!DEMO;
- if(DEMO){for(const s of [{text:'Bonne fête !',anim:'defile',font:1,fg:'#19c37d',bg:'#0b4a3a'},{text:'Coucou\ntoi',anim:'clignote',font:0,fg:'#ffffff',bg:'#ff2892'}]){const b=await textGif(s);demoItems.push({chemin:'x'+demoItems.length,url:URL.createObjectURL(b)})}refresh()}
+ if(DEMO){for(const s of [{text:'Bonne fête !',anim:'defile',font:2,fg:'#19c37d',bg:'#0b4a3a'},{text:'Coucou\ntoi',anim:'clignote',font:0,fg:'#ffffff',bg:'#ff2892'}]){const b=await textGif(s);demoItems.push({chemin:'x'+demoItems.length,url:URL.createObjectURL(b)})}refresh()}
 })();
 })();
 </script>
