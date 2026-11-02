@@ -6,9 +6,8 @@ OUT = ROOT.parent / "include" / "fonts_data.h"
 
 TEXT = "".join(chr(c) for c in range(32, 127)) + "éèêëàâùûçôîïÉÈÀÇ’…•°"
 FONTS = [
-    ("kFontVistaTitle", "selawkl.ttf", 58, TEXT, True),
-    ("kFontVistaText", "selawksl.ttf", 26, TEXT, True),
-    ("kFontVistaMedium", "selawksl.ttf", 40, TEXT, True),
+    ("kFontUi", "VT323-Regular.ttf", 32, TEXT, False),
+    ("kFontUiBig", "VT323-Regular.ttf", 48, TEXT, False),
 ]
 
 def render(name, file, size, chars, smooth):
@@ -43,7 +42,7 @@ def render(name, file, size, chars, smooth):
 def main():
     parts = [
         "// Fichier généré par outils/make_fonts.py — ne pas modifier à la main.",
-        "// Polices : Selawik (SIL Open Font License 1.1).",
+        "// Police : VT323 (SIL Open Font License 1.1).",
         "#pragma once",
         '#include "texte.h"',
         "",

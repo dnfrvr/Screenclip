@@ -10,6 +10,14 @@
 namespace vista {
 constexpr uint32_t kBootMs = 3500;
 
+// DA « système 2001 » : un fond lilas, une barre de titre, du pixel net, un seul rose.
+constexpr uint16_t kInk = 0x10AB;
+constexpr uint16_t kPaper = 0xFFFF;
+constexpr uint16_t kPink = 0xF952;
+constexpr uint16_t kPurple = 0x59FA;
+constexpr int kBarH = 54;
+constexpr int kLeft = 28;
+
 inline uint16_t *cache = nullptr;
 inline bool cached = false;
 
@@ -23,33 +31,57 @@ inline uint16_t dithered(float r, float g, float b, int x, int y) {
   return rgb565(ri < 0 ? 0 : (ri > 255 ? 255 : ri), gi < 0 ? 0 : (gi > 255 ? 255 : gi), bi < 0 ? 0 : (bi > 255 ? 255 : bi));
 }
 
-inline uint16_t lightPixel(int x, int y, int w, int h) {
-  const float v = (float)y / h;
-  float r, g, b;
-  if (v < 0.5f) {
-    const float t = v / 0.5f;
-    r = lerp(150, 250, t); g = lerp(203, 253, t); b = lerp(240, 255, t);
-  } else {
-    const float t = (v - 0.5f) / 0.5f;
-    r = lerp(250, 196, t); g = lerp(253, 226, t); b = lerp(255, 247, t);
+inline void sparkle(Canvas &c, int x, int y, int scale, uint16_t color) {
+  static const char *const kShape[] = {"....#....", "....#....", "...###...", "..#####..", "#########",
+                                       "..#####..", "...###...", "....#....", "....#...."};
+  for (int r = 0; r < 9; ++r) {
+    for (int col = 0; col < 9; ++col) {
+      if (kShape[r][col] == '#') c.fillRect(x + col * scale, y + r * scale, scale, scale, color);
+    }
   }
-  const float angle = atan2f(y + 70.0f, x - w * 0.22f);
-  float ray = 0.5f + 0.5f * sinf(angle * 15.0f);
-  ray = ray * ray * (1 - v * 0.8f) * 0.55f;
-  r += (255 - r) * ray; g += (255 - g) * ray; b += (255 - b) * ray;
-  return dithered(r, g, b, x, y);
+}
+
+inline void ground(Canvas &c) {
+  for (int y = 0; y < c.h; ++y) {
+    const float t = (float)y / c.h;
+    for (int x = 0; x < c.w; ++x) c.pixels[y * c.w + x] = dithered(lerp(236, 255, t), lerp(233, 228, t), lerp(255, 246, t), x, y);
+  }
 }
 
 inline void background(Canvas &c) {
   if (!cache) cache = static_cast<uint16_t *>(heap_caps_malloc(c.w * c.h * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-  if (!cache) { c.fill(0xDF7F); return; }
+  if (!cache) { c.fill(0xEF5F); return; }
   if (!cached) {
-    for (int y = 0; y < c.h; ++y) {
-      for (int x = 0; x < c.w; ++x) cache[y * c.w + x] = lightPixel(x, y, c.w, c.h);
+    Canvas target = {cache, c.w, c.h};
+    ground(target);
+    for (int y = 0; y < kBarH; ++y) {
+      for (int x = 0; x < c.w; ++x) {
+        const float t = (float)x / c.w;
+        cache[y * c.w + x] = dithered(lerp(44, 196, t), lerp(36, 60, t), lerp(214, 240, t), x, y);
+      }
     }
+    target.fillRect(0, kBarH, c.w, 2, kInk);
+    sparkle(target, c.w - 50, 14, 3, kPaper);
     cached = true;
   }
   memcpy(c.pixels, cache, c.w * c.h * 2);
+}
+
+inline void window(Canvas &c, const char *title) {
+  background(c);
+  drawText(c, kFontUi, kLeft, 37, kPaper, title);
+}
+
+// Barre de progression en blocs qui défilent.
+inline void blocks(Canvas &c, int x, int y, int w, uint32_t ms) {
+  constexpr int kH = 22, kBlock = 14, kGap = 4, kLit = 5;
+  c.fillRect(x, y, w, kH, kInk);
+  c.fillRect(x + 2, y + 2, w - 4, kH - 4, kPaper);
+  const int slots = (w - 8) / (kBlock + kGap);
+  const int head = (ms / 120) % (slots + kLit);
+  for (int i = head - kLit; i < head; ++i) {
+    if (i >= 0 && i < slots) c.fillRect(x + 5 + i * (kBlock + kGap), y + 5, kBlock, kH - 10, kPink);
+  }
 }
 
 inline void roundRect(Canvas &c, int x, int y, int w, int h, float radius, const uint8_t top[3],
@@ -72,91 +104,45 @@ inline void roundRect(Canvas &c, int x, int y, int w, int h, float radius, const
   }
 }
 
-inline void glassFrame(Canvas &c, int x, int y, int size) {
-  static const uint8_t glow[3] = {120, 190, 235}, rimTop[3] = {178, 216, 240}, rimBottom[3] = {120, 178, 220};
-  static const uint8_t edge[3] = {96, 150, 196}, panelTop[3] = {250, 252, 253}, panelBottom[3] = {196, 206, 214};
-  static const uint8_t white[3] = {255, 255, 255};
-  roundRect(c, x - 6, y - 5, size + 12, size + 14, 20, glow, glow, 70);
-  roundRect(c, x, y, size, size, 15, rimTop, rimBottom);
-  roundRect(c, x + 9, y + 9, size - 18, size - 18, 8, edge, edge);
-  roundRect(c, x + 11, y + 11, size - 22, size - 22, 7, panelTop, panelBottom);
-  roundRect(c, x + 3, y + 3, size - 6, size * 46 / 100, 12, white, white, 70);
-}
-
-inline void busyRing(Canvas &c, int cx, int cy, float radius, float thickness, uint16_t color, uint32_t ms) {
-  const float head = ms * (2 * PI / 1200.0f);
-  const int r = (int)(radius + thickness) + 1;
-  for (int py = cy - r; py <= cy + r; ++py) {
-    if (py < 0 || py >= c.h) continue;
-    for (int px = cx - r; px <= cx + r; ++px) {
-      if (px < 0 || px >= c.w) continue;
-      const float dx = px - cx, dy = py - cy;
-      const float cover = clamp01(thickness / 2 + 0.5f - fabsf(sqrtf(dx * dx + dy * dy) - radius));
-      if (cover <= 0) continue;
-      float turn = (head - atan2f(dy, dx)) / (2 * PI);
-      turn -= floorf(turn);
-      const float tail = 0.12f + 0.88f * (1 - turn) * (1 - turn);
-      uint16_t &p = c.pixels[py * c.w + px];
-      p = blend565(p, color, (uint8_t)(cover * tail * 255));
-    }
-  }
-}
-
 inline void drawBoot(Canvas &c, uint32_t ms) {
-  background(c);
+  ground(c);
   const uint8_t logoOpacity = ms < 200 ? 0 : (ms < 900 ? (ms - 200) * 255 / 700 : 255);
   const int logoX = (c.w - kLogoW) / 2, logoY = 58 - kLogoPad;
   drawImage(c, logoX, logoY, kLogoW, kLogoH, kLogoColor, kLogoAlpha, logoOpacity);
-
-  drawText(c, kFontVistaMedium, 26, c.h - 24, rgb565(42, 112, 184), BOOT_BYLINE, logoOpacity);
-  if (ms > 600) busyRing(c, c.w / 2, 272, 19, 5, rgb565(46, 150, 222), ms);
+  drawText(c, kFontUi, kLeft, c.h - 22, kInk, BOOT_BYLINE, logoOpacity);
+  sparkle(c, c.w - 60, 20, 3, kPink);
+  if (ms > 600) blocks(c, (c.w - 300) / 2, 262, 300, ms);
 }
 
 inline void drawMessage(Canvas &c, const char *title, const char *text, int32_t spinnerMs) {
-  constexpr uint16_t kBlue = 0x2B97;
-  constexpr uint16_t kInk = 0x2965;
-  background(c);
-  constexpr int kFrame = 136;
-  const int fx = 84, fy = (c.h - kFrame) / 2;
-  glassFrame(c, fx, fy, kFrame);
-  if (spinnerMs >= 0) {
-    busyRing(c, fx + kFrame / 2, fy + kFrame / 2, 30, 8, rgb565(46, 150, 222), spinnerMs);
-  } else {
-    drawText(c, kFontVistaTitle, fx + (kFrame - textWidth(kFontVistaTitle, "!")) / 2, fy + kFrame / 2 + 21, kBlue, "!");
-  }
-  const int tx = fx + kFrame + 44;
-  drawText(c, kFontVistaTitle, tx, c.h / 2 - (text ? 4 : -20), kBlue, title);
-  if (text) drawText(c, kFontVistaText, tx + 2, c.h / 2 + 42, kInk, text);
+  window(c, "Screenclip");
+  drawText(c, kFontUiBig, kLeft, 150, kInk, title);
+  if (text) drawText(c, kFontUi, kLeft, 202, kInk, text);
+  if (spinnerMs >= 0) blocks(c, kLeft, 244, 420, spinnerMs);
 }
 
 inline void drawHelp(Canvas &c) {
-  constexpr uint16_t kBlue = 0x2B97;
-  constexpr uint16_t kInk = 0x2965;
   static const char *const kRows[][2] = {
       {"Un appui", "image suivante"},
       {"Appui long", "image précédente"},
       {"Deux appuis", "tourne l'écran"},
-      {"Appui de 2 secondes", "ouvre les réglages"},
+      {"Appui de 2 s", "ouvre les réglages"},
       {"Page Téléphone", "ajoute ou supprime tes écrans"},
-      {"Branchée à un ordinateur", "devient une clé USB pour tes GIF"},
+      {"Sur un ordinateur", "devient une clé USB"},
   };
-  background(c);
-  const int left = 56;
-  drawText(c, kFontVistaTitle, left, 80, kBlue, "Mode d'emploi");
-  c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
+  window(c, "Mode d'emploi");
   for (int i = 0; i < 6; ++i) {
-    const int y = 136 + i * 33;
-    drawText(c, kFontVistaText, left, y, kBlue, kRows[i][0]);
-    drawText(c, kFontVistaText, left + 320, y, kInk, kRows[i][1]);
+    const int y = 92 + i * 41;
+    drawText(c, kFontUi, kLeft, y, kPurple, kRows[i][0]);
+    drawText(c, kFontUi, 300, y, kInk, kRows[i][1]);
   }
 }
 
 // Colonne de droite de la page Téléphone : le QR code occupe la gauche.
-inline void drawPhoneText(Canvas &c, int x, const char *title, const char *const *lines, int count) {
-  constexpr uint16_t kBlue = 0x2B97;
-  constexpr uint16_t kInk = 0x2965;
-  drawText(c, kFontVistaMedium, x, 76, kBlue, title);
-  for (int i = 0; i < count; ++i) drawText(c, kFontVistaText, x, 134 + i * 36, kInk, lines[i]);
+inline void drawPhone(Canvas &c, const char *title, const char *const *lines, int count) {
+  window(c, title);
+  c.fillRect(14, 62, 252, 252, kInk);
+  for (int i = 0; i < count; ++i) drawText(c, kFontUi, 292, 112 + i * 44, kInk, lines[i]);
 }
 
 struct SettingRow {
@@ -165,19 +151,14 @@ struct SettingRow {
 };
 
 inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selected) {
-  constexpr uint16_t kBlue = 0x2B97;
-  constexpr uint16_t kInk = 0x2965;
-  static const uint8_t kPick[3] = {214, 234, 250};
-  background(c);
-  const int left = 56;
-  drawText(c, kFontVistaTitle, left, 80, kBlue, "Réglages");
-  c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
+  window(c, "Réglages");
   for (int i = 0; i < count; ++i) {
-    const int y = 148 + i * 46;
-    if (i == selected) roundRect(c, left - 16, y - 31, c.w - 2 * left + 32, 44, 10, kPick, kPick);
-    drawText(c, kFontVistaText, left, y, kBlue, rows[i].label);
-    drawText(c, kFontVistaText, left + 320, y, kInk, rows[i].value);
+    const int y = 110 + i * 50;
+    const bool on = i == selected;
+    if (on) c.fillRect(0, y - 34, c.w, 46, kInk);
+    drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
+    drawText(c, kFontUi, 370, y, on ? kPaper : kInk, rows[i].value);
   }
-  drawText(c, kFontVistaText, left, 300, kInk, "Appui : ligne suivante    Long : changer    2 s : quitter");
+  drawText(c, kFontUi, kLeft, 300, kPurple, "Appui : ligne suivante   Appui long : changer");
 }
 }

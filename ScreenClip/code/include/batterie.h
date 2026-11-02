@@ -78,27 +78,20 @@ inline void build() {
   pillWidth = kPad + kIconW + 4 + kPad;
   const int ix = kPad, iy = (kH - kIconH) / 2;
 
-  static const uint8_t white[3] = {255, 255, 255};
-  static const uint8_t rim[3] = {118, 170, 212}, glassTop[3] = {250, 253, 255}, glassBottom[3] = {196, 222, 244};
-  static const uint8_t shell[3] = {74, 92, 112}, cellTop[3] = {252, 253, 254}, cellBottom[3] = {214, 222, 230};
-  static const uint8_t greenTop[3] = {150, 226, 92}, greenBottom[3] = {52, 160, 40};
-  static const uint8_t redTop[3] = {246, 120, 96}, redBottom[3] = {200, 40, 32};
-  static const uint8_t boltTop[3] = {255, 204, 64}, boltBottom[3] = {236, 150, 16};
+  static const uint8_t white[3] = {255, 255, 255}, ink[3] = {22, 20, 88};
+  static const uint8_t pinkTop[3] = {255, 40, 146}, pinkBottom[3] = {255, 40, 146};
+  static const uint8_t redTop[3] = {255, 90, 60}, redBottom[3] = {255, 90, 60};
+  static const uint8_t boltTop[3] = {255, 40, 146}, boltBottom[3] = {255, 40, 146};
 
   Canvas alpha = {alphaPixels, kW, kH};
   alpha.fill(0);
-  vista::roundRect(alpha, 0, 0, pillWidth, kH, kH / 2.0f, white, white, BATTERY_PILL_OPACITY);
-  vista::roundRect(alpha, ix, iy, kIconW, kIconH, 4, white, white);
-  alpha.fillRect(ix + kIconW, iy + 6, 4, kIconH - 12, 0xFFFF);
+  alpha.fillRect(0, 0, pillWidth, kH, 0xFFFF);
 
   Canvas color = {colorPixels, kW, kH};
-  color.fill(rgb565(rim[0], rim[1], rim[2]));
-  vista::roundRect(color, 1, 1, pillWidth - 2, kH - 2, kH / 2.0f - 1, glassTop, glassBottom);
-  vista::roundRect(color, 4, 3, pillWidth - 8, kH / 2 - 3, kH / 4.0f, white, white, 150);
-
-  vista::roundRect(color, ix, iy, kIconW, kIconH, 4, shell, shell);
-  color.fillRect(ix + kIconW, iy + 6, 4, kIconH - 12, rgb565(shell[0], shell[1], shell[2]));
-  vista::roundRect(color, ix + 2, iy + 2, kIconW - 4, kIconH - 4, 2, cellTop, cellBottom);
+  color.fill(rgb565(ink[0], ink[1], ink[2]));
+  color.fillRect(ix, iy, kIconW, kIconH, 0xFFFF);
+  color.fillRect(ix + kIconW, iy + 6, 4, kIconH - 12, 0xFFFF);
+  color.fillRect(ix + 2, iy + 2, kIconW - 4, kIconH - 4, rgb565(ink[0], ink[1], ink[2]));
 
   if (onUsb || !present) {
     static const char *const kBolt[] = {
@@ -116,8 +109,8 @@ inline void build() {
   } else {
     const bool low = bars <= 1;
     for (int k = 0; k < bars; ++k) {
-      vista::roundRect(color, ix + 4 + k * (kBarW + kBarGap), iy + 4, kBarW, kIconH - 8, 1.5f, low ? redTop : greenTop,
-                       low ? redBottom : greenBottom);
+      vista::roundRect(color, ix + 4 + k * (kBarW + kBarGap), iy + 4, kBarW, kIconH - 8, 1.5f, low ? redTop : pinkTop,
+                       low ? redBottom : pinkBottom);
     }
   }
 }

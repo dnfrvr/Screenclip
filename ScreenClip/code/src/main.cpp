@@ -441,19 +441,16 @@ void onPhoneLibraryChanged() {
 }
 
 void drawPhonePage(int step) {
-  vista::background(ui);
   if (step == 0) {
-    static const char *const lines[] = {"1. Ouvre l'appareil photo du téléphone", "2. Vise ce code", "3. Accepte le Wi-Fi proposé"};
+    const String password = "Mot de passe " + phonePassword;
+    const char *const lines[] = {"Vise ce code avec ton", "appareil photo, puis accepte", "le Wi-Fi proposé.", phoneSsid.c_str(), password.c_str()};
     const String code = "WIFI:T:WPA;S:" + phoneSsid + ";P:" + phonePassword + ";;";
-    telephone::drawQr(ui, 16, 16, 288, code.c_str());
-    vista::drawPhoneText(ui, 330, "Ajoute tes écrans", lines, 3);
-    const String manual = phoneSsid + "  mot de passe " + phonePassword;
-    drawText(ui, kFontVistaText, 330, 286, 0x2965, manual.c_str());
+    vista::drawPhone(ui, "Ajoute tes écrans", lines, 5);
+    telephone::drawQr(ui, 16, 64, 248, code.c_str());
   } else {
-    static const char *const lines[] = {"Vise ce nouveau code", "pour ouvrir ta page.", "Tu y verras tous tes écrans."};
-    telephone::drawQr(ui, 16, 16, 288, telephone::kUrl);
-    vista::drawPhoneText(ui, 330, "C'est connecté !", lines, 3);
-    drawText(ui, kFontVistaText, 330, 286, 0x2965, "Ou tape 192.168.4.1 dans le navigateur");
+    const char *const lines[] = {"Vise ce nouveau code pour", "ouvrir ta page.", "", "Ou tape dans le navigateur :", "192.168.4.1"};
+    vista::drawPhone(ui, "C'est connecté !", lines, 5);
+    telephone::drawQr(ui, 16, 64, 248, telephone::kUrl);
   }
   showUi();
 }
