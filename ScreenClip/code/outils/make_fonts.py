@@ -5,21 +5,10 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT.parent / "include" / "fonts_data.h"
 
 TEXT = "".join(chr(c) for c in range(32, 127)) + "éèêëàâùûçôîïÉÈÀÇ’…•°"
-DIGITS = "0123456789"
-
-ASCII = "".join(chr(c) for c in range(32, 127))
-
 FONTS = [
-    ("kFontLabel", "FiraSans-Medium.ttf", 24, TEXT, True),
-    ("kFontSup", "FiraSans-Medium.ttf", 15, TEXT, True),
-    ("kFontTitle", "FiraSans-Medium.ttf", 30, TEXT, True),
-    ("kFontHeader", "FiraSans-Bold.ttf", 56, TEXT, True),
-    ("kFontLine", "FiraSans-Bold.ttf", 36, TEXT, True),
     ("kFontVistaTitle", "selawkl.ttf", 58, TEXT, True),
     ("kFontVistaText", "selawksl.ttf", 26, TEXT, True),
-    ("kFontVistaSmall", "selawksl.ttf", 20, TEXT, True),
     ("kFontVistaMedium", "selawksl.ttf", 40, TEXT, True),
-    ("kFontBig", "FiraSans-Bold.ttf", 166, DIGITS + " ", True),
 ]
 
 def render(name, file, size, chars, smooth):
@@ -54,7 +43,7 @@ def render(name, file, size, chars, smooth):
 def main():
     parts = [
         "// Fichier généré par outils/make_fonts.py — ne pas modifier à la main.",
-        "// Polices : Fira Sans et Selawik (SIL Open Font License 1.1).",
+        "// Polices : Selawik (SIL Open Font License 1.1).",
         "#pragma once",
         '#include "texte.h"',
         "",

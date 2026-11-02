@@ -9,11 +9,6 @@
 
 #define GIF_MAX_BYTES (6 * 1024 * 1024)
 
-#define METRO_ENABLED 1
-#define METRO_DWELL_S 20
-#define METRO_START_DOTS_MS 3500
-#define METRO_HELP_MS 4000
-
 #define BATTERY_OVERLAY 1
 #define BATTERY_OVERLAY_MS 2500
 #define BATTERY_PILL_OPACITY 205
@@ -27,8 +22,6 @@
 
 #define BOOT_SCREEN 1
 #define BOOT_BYLINE "par Orou"
-
-#define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
 
 #define CPU_MHZ_STATIC 160
 

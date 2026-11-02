@@ -136,14 +136,13 @@ inline void drawHelp(Canvas &c) {
       {"Un appui", "image suivante"},
       {"Appui long", "image précédente"},
       {"Deux appuis", "tourne l'écran"},
-      {"Deux appuis sur le métro", "change de ligne"},
       {"Branchée à un ordinateur", "devient une clé USB pour tes GIF"},
   };
   background(c);
   const int left = 56;
   drawText(c, kFontVistaTitle, left, 80, kBlue, "Mode d'emploi");
   c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 4; ++i) {
     const int y = 142 + i * 37;
     drawText(c, kFontVistaText, left, y, kBlue, kRows[i][0]);
     drawText(c, kFontVistaText, left + 320, y, kInk, kRows[i][1]);

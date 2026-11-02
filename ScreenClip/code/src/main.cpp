@@ -14,7 +14,6 @@
 #include "ecran.h"
 
 #include "batterie.h"
-#include "metro.h"
 #include "texte.h"
 #include "cle_usb.h"
 #include "vista.h"
@@ -40,8 +39,6 @@ bool srcCover = true;
 
 constexpr int kUiW = 820, kUiH = 320;
 Canvas ui = {nullptr, kUiW, kUiH};
-bool metroPage = false;
-uint32_t metroSignature = 0;
 
 uint32_t rowMap[PANEL_H];
 uint32_t colMap[PANEL_W];
@@ -372,9 +369,8 @@ uint32_t lastRetryAt = 0;
 void loadLibrary();
 
 int gifSlots() { return gifFiles.empty() ? 1 : (int)gifFiles.size(); }
-int pageCount() { return kGifBase + gifSlots() + (METRO_ENABLED ? 1 : 0); }
+int pageCount() { return kGifBase + gifSlots(); }
 bool isHelpIndex(int index) { return HELP_ENABLED && index == 0; }
-bool isMetroIndex(int index) { return METRO_ENABLED && index == kGifBase + gifSlots(); }
 
 void setFullSpeed(bool full) {
   static int current = 240;
@@ -383,12 +379,6 @@ void setFullSpeed(bool full) {
     setCpuFrequencyMhz(wanted);
     current = wanted;
   }
-}
-
-void setMetroPage(bool on) {
-  if (on && !metroPage) metro::enter();
-  metroSignature = 0;
-  metroPage = on;
 }
 
 void showNoGifMessage() {
@@ -407,25 +397,15 @@ void showPage(int index, int dir) {
       closeGif();
       setFullSpeed(false);
       messagePage = false;
-      setMetroPage(false);
       helpPage = true;
       vista::drawHelp(ui);
       showUi();
       return;
     }
     helpPage = false;
-    if (isMetroIndex(currentIndex)) {
-      closeGif();
-      setFullSpeed(false);
-      messagePage = false;
-      setMetroPage(true);
-      prefs.putString("last", "#metro");
-      return;
-    }
     if (gifFiles.empty()) {
       closeGif();
       setFullSpeed(false);
-      setMetroPage(false);
       messagePage = true;
       lastRetryAt = millis();
       showNoGifMessage();
@@ -434,7 +414,6 @@ void showPage(int index, int dir) {
     setFullSpeed(true);
     if (openGif(currentIndex - kGifBase)) {
       messagePage = false;
-      setMetroPage(false);
       nextFrameAt = millis();
       prefs.putString("last", gifFiles[currentIndex - kGifBase]);
       return;
@@ -451,7 +430,6 @@ void showPage(int index, int dir) {
     index += dir;
   }
   setFullSpeed(false);
-  setMetroPage(false);
   messagePage = true;
   lastRetryAt = millis();
   showMessage("GIF illisibles", "Vérifie les fichiers sur la carte SD");
@@ -464,7 +442,6 @@ void step(int dir) {
 
 int savedIndex() {
   const String last = prefs.getString("last", "");
-  if (METRO_ENABLED && last == "#metro") return kGifBase + gifSlots();
   for (size_t i = 0; i < gifFiles.size(); ++i) {
     if (gifFiles[i] == last) return kGifBase + i;
   }
@@ -528,15 +505,6 @@ void rotateScreen() {
   if (srcPixels) buildMaps();
 }
 
-void doublePress() {
-  if (metroPage) {
-    metro::nextLine();
-    prefs.putUChar("dir", metro::lineIndex);
-  } else {
-    rotateScreen();
-  }
-}
-
 void handleBootButton() {
   static uint32_t pendingClickAt = 0;
   static bool pending = false;
@@ -551,7 +519,7 @@ void handleBootButton() {
     const uint32_t pressedAt = event.releasedAt - event.heldMs;
     if (pending && pressedAt - pendingClickAt <= DOUBLE_CLICK_MS) {
       pending = false;
-      doublePress();
+      rotateScreen();
       continue;
     }
     if (pending) step(+1);
@@ -571,7 +539,6 @@ uint32_t transferStartMs = 0;
 void enterTransfer() {
   closeGif();
   setFullSpeed(true);
-  setMetroPage(false);
   overlayUntil = 0;
   transferStartMs = millis();
   transferMode = true;
@@ -625,10 +592,8 @@ void setup() {
 
   prefs.begin("gifplayer", false);
   rotation = prefs.getUChar("rot", SCREEN_ROTATION) & 3;
-  metro::lineIndex = prefs.getUChar("dir", kMetroDefaultLine) % kMetroLineCount;
 
   for (int i = 0; i < 4; ++i) battery::update(true);
-  metro::begin();
   loadLibrary();
 #if BOOT_SCREEN
   showBatteryOverlay(vista::kBootMs + BATTERY_OVERLAY_MS);
@@ -671,19 +636,6 @@ void loop() {
     delay(20);
     return;
   }
-
-#if METRO_ENABLED
-  if (metroPage) {
-    const uint32_t signature = metro::signature() * 4 + rotation;
-    if (signature != metroSignature) {
-      metroSignature = signature;
-      metro::draw(ui);
-      showUi();
-    }
-    delay(5);
-    return;
-  }
-#endif
 
   if (gifOpen && (int32_t)(millis() - nextFrameAt) >= 0) {
     int delayMs = 0;
