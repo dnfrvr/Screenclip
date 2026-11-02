@@ -27,7 +27,7 @@ Dans les réglages, un appui court passe à la ligne suivante et un appui long v
 | Réglage | Effet |
 |---|---|
 | Rotation automatique | l'image suit le sens de la barrette. Si elle est de travers dans une position, la ligne Tourner l'écran la corrige et la barrette retient cette position. |
-| Tourner l'écran | tourne l'image de 90°. |
+| Tourner l'écran | revient sur l'image : chaque appui la tourne de 90°, un appui long valide. |
 | Veille | après 2 minutes sans mouvement, une petite étoile se déplace sur fond noir avec un rétroéclairage faible. L'écran s'éteint 5 minutes plus tard. Un mouvement ou un appui le rallume. |
 | Diaporama | change de GIF toutes les 30 s, 1 min ou 5 min. |
 

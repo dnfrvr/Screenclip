@@ -68,7 +68,30 @@ void showBatteryOverlay(uint32_t durationMs) {
 #endif
 }
 
+// Mode rotation : on voit le vrai rendu pendant qu'on tourne l'image.
+bool rotateMode = false;
+uint32_t rotateTouchedAt = 0;
+uint16_t hintPixels[vista::kHintW * vista::kHintH];
+
+void compositeHint(uint16_t *panel) {
+  const int sh = screenH();
+  for (int oy = 0; oy < vista::kHintH; ++oy) {
+    for (int ox = 0; ox < vista::kHintW; ++ox) {
+      const int sx = 12 + ox, sy = sh - vista::kHintH - 12 + oy;
+      int px, py;
+      switch (rotation & 3) {
+        case 0: px = sx; py = sy; break;
+        case 1: px = PANEL_W - 1 - sy; py = sx; break;
+        case 2: px = PANEL_W - 1 - sx; py = PANEL_H - 1 - sy; break;
+        default: px = sy; py = PANEL_H - 1 - sx; break;
+      }
+      if (px >= 0 && px < PANEL_W && py >= 0 && py < PANEL_H) panel[py * PANEL_W + px] = hintPixels[oy * vista::kHintW + ox];
+    }
+  }
+}
+
 void compositeOverlay(uint16_t *panel) {
+  if (rotateMode) compositeHint(panel);
   if ((int32_t)(overlayUntil - millis()) <= 0) return;
   battery::composite(panel, rotation);
   overlayShown = true;
@@ -645,7 +668,7 @@ void drawSettingsPage() {
   static const char *const slides[kSlideChoices] = {"désactivé", "toutes les 30 s", "toutes les minutes", "toutes les 5 min"};
   const vista::SettingRow rows[] = {
       {"Rotation auto", capteur::present ? onOff[autoRotate] : missing},
-      {"Tourner l'écran", "90°"},
+      {"Tourner l'écran", "ouvrir"},
       {"Veille", capteur::present ? onOff[sleepEnabled] : missing},
       {"Diaporama", slides[slideIndex]},
       {"Ajouter des écrans", "ouvrir"},
@@ -670,6 +693,11 @@ void closeSettings() {
   showPage(currentIndex, 1, true);
 }
 
+void leaveRotateMode() {
+  rotateMode = false;
+  if (srcPixels) renderFrame();
+}
+
 void changeSetting() {
   switch (settingsRow) {
     case 0:
@@ -679,7 +707,11 @@ void changeSetting() {
       if (autoRotate) currentPosition = -1;
       break;
     case 1:
-      rotateScreen();
+      settingsPage = false;
+      showPage(currentIndex, 1, true);
+      rotateMode = true;
+      rotateTouchedAt = millis();
+      if (srcPixels) renderFrame();
       break;
     case 2:
       if (!capteur::present) break;
@@ -746,7 +778,7 @@ void pollSensors() {
     motionSeen = true;
     noteActivity();
   }
-  if (!autoRotate || sleeping) return;
+  if (!autoRotate || sleeping || rotateMode) return;
   const int position = tracker.update(ax, ay, millis());
   if (position < 0 || position == currentPosition) return;
   currentPosition = position;
@@ -766,7 +798,7 @@ bool handleSleep() {
     wakeUp();
     return false;
   }
-  if (sleepEnabled && capteur::present && !settingsPage && !bootDown &&
+  if (sleepEnabled && capteur::present && !settingsPage && !rotateMode && !bootDown &&
       millis() - lastActivityAt >= SLEEP_AFTER_S * 1000UL) {
     enterSleep();
     return true;
@@ -776,7 +808,7 @@ bool handleSleep() {
 
 void advanceSlideshow() {
   const int seconds = kSlideSeconds[slideIndex];
-  if (!seconds || !gifOpen || gifFiles.size() < 2) return;
+  if (!seconds || !gifOpen || rotateMode || gifFiles.size() < 2) return;
   if (millis() - pageShownAt < seconds * 1000UL) return;
   const int next = currentIndex + 1 >= kGifBase + gifSlots() ? kGifBase : currentIndex + 1;
   showPage(next, 1, true);
@@ -792,7 +824,11 @@ void handleBootButton() {
       swallowRelease = false;
       continue;
     }
-    if (settingsPage) {
+    if (rotateMode) {
+      rotateTouchedAt = millis();
+      if (event.isLong) leaveRotateMode();
+      else rotateScreen();
+    } else if (settingsPage) {
       settingsTouchedAt = millis();
       if (event.isLong) changeSetting();
       else settingsRow = (settingsRow + 1) % kSettingsRows;
@@ -823,6 +859,7 @@ uint32_t transferStartMs = 0;
 void enterTransfer() {
   if (sleeping) wakeUp(false);
   settingsPage = false;
+  rotateMode = false;
   leavePhone();
   closeGif();
   setFullSpeed(true);
@@ -875,6 +912,8 @@ void setup() {
   startBootButton();
 
   ui.pixels = static_cast<uint16_t *>(heap_caps_malloc(kUiW * kUiH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  Canvas hint = {hintPixels, vista::kHintW, vista::kHintH};
+  vista::drawRotateHint(hint);
 
   gif.begin(GIF_PALETTE_RGB565_LE);
 
@@ -917,6 +956,8 @@ void loop() {
   if (handleSleep()) return;
 
   handleBootButton();
+
+  if (rotateMode && millis() - rotateTouchedAt > SETTINGS_TIMEOUT_MS) leaveRotateMode();
 
   if (settingsPage) {
     if (millis() - settingsTouchedAt > SETTINGS_TIMEOUT_MS) closeSettings();

@@ -125,6 +125,14 @@ inline void drawPhone(Canvas &c, const char *title, const char *const *lines, in
   for (int i = 0; i < count; ++i) drawText(c, kFontUi, 292, 112 + i * 44, i < primary ? kInk : kMoss, lines[i]);
 }
 
+constexpr int kHintW = 224, kHintH = 84;
+
+inline void drawRotateHint(Canvas &c) {
+  c.fill(kInk);
+  drawText(c, kFontUi, 14, 34, kPaper, "Appui : tourner");
+  drawText(c, kFontUi, 14, 70, kPaper, "Long : valider");
+}
+
 constexpr int kSaverW = 36, kSaverH = 36;
 
 inline void drawSaver(Canvas &c, int x, int y) {
