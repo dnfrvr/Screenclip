@@ -445,11 +445,11 @@ void drawPhonePage(int step) {
     const String password = "Mot de passe " + phonePassword;
     const char *const lines[] = {"Vise ce code avec ton", "appareil photo, puis accepte", "le Wi-Fi proposé.", phoneSsid.c_str(), password.c_str()};
     const String code = "WIFI:T:WPA;S:" + phoneSsid + ";P:" + phonePassword + ";;";
-    vista::drawPhone(ui, "Ajoute tes écrans", lines, 5);
+    vista::drawPhone(ui, "Ajoute tes écrans", lines, 5, 3);
     telephone::drawQr(ui, 16, 64, 248, code.c_str());
   } else {
     const char *const lines[] = {"Vise ce nouveau code pour", "ouvrir ta page.", "", "Ou tape dans le navigateur :", "192.168.4.1"};
-    vista::drawPhone(ui, "C'est connecté !", lines, 5);
+    vista::drawPhone(ui, "C'est connecté !", lines, 5, 2);
     telephone::drawQr(ui, 16, 64, 248, telephone::kUrl);
   }
   showUi();

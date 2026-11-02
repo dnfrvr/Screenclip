@@ -17,6 +17,7 @@ constexpr uint16_t kPink = 0xF952;
 constexpr uint16_t kDeepPink = 0xB08C;
 constexpr uint16_t kGround = 0xFF7E;
 constexpr uint16_t kGreen = 0x1E0F;
+constexpr uint16_t kMoss = 0x2BCC;
 constexpr int kBarH = 54;
 constexpr int kLeft = 28;
 
@@ -98,7 +99,7 @@ inline void drawBoot(Canvas &c, uint32_t ms) {
 inline void drawMessage(Canvas &c, const char *title, const char *text, int32_t spinnerMs) {
   window(c, "Screenclip");
   drawText(c, kFontUiBig, kLeft, 150, kInk, title);
-  if (text) drawText(c, kFontUi, kLeft, 202, kInk, text);
+  if (text) drawText(c, kFontUi, kLeft, 202, kMoss, text);
   if (spinnerMs >= 0) blocks(c, kLeft, 244, 420, spinnerMs);
 }
 
@@ -115,15 +116,15 @@ inline void drawHelp(Canvas &c) {
   for (int i = 0; i < 6; ++i) {
     const int y = 92 + i * 41;
     drawText(c, kFontUi, kLeft, y, kDeepPink, kRows[i][0]);
-    drawText(c, kFontUi, 300, y, kInk, kRows[i][1]);
+    drawText(c, kFontUi, 300, y, kMoss, kRows[i][1]);
   }
 }
 
 // Colonne de droite de la page Téléphone : le QR code occupe la gauche.
-inline void drawPhone(Canvas &c, const char *title, const char *const *lines, int count) {
+inline void drawPhone(Canvas &c, const char *title, const char *const *lines, int count, int primary) {
   window(c, title);
   c.fillRect(14, 62, 252, 252, kInk);
-  for (int i = 0; i < count; ++i) drawText(c, kFontUi, 292, 112 + i * 44, kInk, lines[i]);
+  for (int i = 0; i < count; ++i) drawText(c, kFontUi, 292, 112 + i * 44, i < primary ? kInk : kMoss, lines[i]);
 }
 
 struct SettingRow {
@@ -138,8 +139,8 @@ inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selec
     const bool on = i == selected;
     if (on) c.fillRect(0, y - 34, c.w, 46, kInk);
     drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
-    drawText(c, kFontUi, 370, y, on ? kPaper : kInk, rows[i].value);
+    drawText(c, kFontUi, 370, y, on ? kPaper : kMoss, rows[i].value);
   }
-  drawText(c, kFontUi, kLeft, 300, kDeepPink, "Appui : ligne suivante   Appui long : changer");
+  drawText(c, kFontUi, kLeft, 300, kMoss, "Appui : ligne suivante   Appui long : changer");
 }
 }
