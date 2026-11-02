@@ -415,7 +415,7 @@ void showPage(int index, int dir, bool quiet = false);
 
 void showNoGifMessage() {
   if (!sdMounted) showMessage("Pas de carte SD", "Insère une carte microSD");
-  else showMessage("Aucun écran", "Appui de 2 s, puis Ajouter des écrans");
+  else showMessage("Aucun écran", "Appuie 2 secondes sur BOOT pour accéder aux réglages");
 }
 
 bool phonePage = false;
