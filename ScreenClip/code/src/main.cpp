@@ -71,7 +71,7 @@ void showBatteryOverlay(uint32_t durationMs) {
 // Mode rotation : on voit le vrai rendu pendant qu'on tourne l'image.
 bool rotateMode = false;
 uint32_t rotateTouchedAt = 0;
-uint16_t hintPixels[vista::kHintW * vista::kHintH];
+uint16_t *hintPixels = nullptr;
 
 void compositeHint(uint16_t *panel) {
   const int sh = screenH();
@@ -91,7 +91,7 @@ void compositeHint(uint16_t *panel) {
 }
 
 void compositeOverlay(uint16_t *panel) {
-  if (rotateMode) compositeHint(panel);
+  if (rotateMode && hintPixels) compositeHint(panel);
   if ((int32_t)(overlayUntil - millis()) <= 0) return;
   battery::composite(panel, rotation);
   overlayShown = true;
@@ -912,8 +912,11 @@ void setup() {
   startBootButton();
 
   ui.pixels = static_cast<uint16_t *>(heap_caps_malloc(kUiW * kUiH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-  Canvas hint = {hintPixels, vista::kHintW, vista::kHintH};
-  vista::drawRotateHint(hint);
+  hintPixels = static_cast<uint16_t *>(heap_caps_malloc(vista::kHintW * vista::kHintH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  if (hintPixels) {
+    Canvas hint = {hintPixels, vista::kHintW, vista::kHintH};
+    vista::drawRotateHint(hint);
+  }
 
   gif.begin(GIF_PALETTE_RGB565_LE);
 
