@@ -4,15 +4,15 @@
 @font-face{font-family:"VT323";src:url(data:font/woff2;base64,/*VT323*/) format("woff2");font-display:block}
 /* Une page d'application au pouce : pile de barrettes, action principale fixée en bas. */
 :root{--bg:#fff0f6;--surface:#fff;--ink:#0b4a3a;--muted:#2b7a61;--line:#f6d3e2;--accent:#d81b78;--on-accent:#fff;--pick:#0b4a3a;--on-pick:#fff;--soft:#d9f7e8;--danger:#b3126a;
---font:"VT323",ui-monospace,Menlo,monospace}
+--font:-apple-system,"Roboto","Segoe UI",sans-serif;--title:"VT323",ui-monospace,Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font:400 21px/1.25 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.4 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
 main{max-width:520px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px;display:flex;flex-direction:column;gap:16px}
-h1{font-size:40px;line-height:1.1;margin:0;font-weight:400;text-wrap:balance}
-h2{font-size:21px;margin:0 0 8px;font-weight:400}
+h1{font:400 40px/1.1 var(--title);margin:0;text-wrap:balance}
+h2{font-size:15px;margin:0 0 8px;font-weight:600}
 p{margin:0}.muted{color:var(--muted)}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
@@ -25,19 +25,19 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,label:focus-with
 .clip canvas{touch-action:none}
 #list{display:flex;flex-direction:column;gap:14px}
 .item{position:relative}
-.del{position:absolute;right:8px;top:8px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:20px}
+.del{position:absolute;right:8px;top:8px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:15px;font-weight:600}
 .empty{text-align:center;padding:36px 16px;border:2px dashed var(--line);border-radius:20px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .bar>div{max-width:488px;margin:0 auto;display:flex;gap:10px}
-.main{flex:1;min-height:54px;border-radius:16px;background:var(--accent);color:var(--on-accent);font-size:24px}
+.main{flex:1;min-height:54px;border-radius:16px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:18px}
 .main:disabled{opacity:.5}
 .choice{display:grid;gap:12px}
 .card{text-align:left;width:100%;background:var(--surface);padding:18px;border-radius:18px;border:1px solid var(--line);display:block}
-.card b{display:block;font-size:26px;font-weight:400}
+.card b{display:block;font:400 26px/1.2 var(--title)}
 textarea{width:100%;min-height:84px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{min-height:44px;padding:0 14px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
-.chip[aria-pressed="true"]{background:var(--pick);border-color:var(--pick);color:var(--on-pick)}
+.chip[aria-pressed="true"]{background:var(--pick);border-color:var(--pick);color:var(--on-pick);font-weight:600}
 .swatch{width:44px;height:44px;border-radius:50%;border:1px solid var(--line)}
 .swatch[aria-pressed="true"]{outline:3px solid var(--pick);outline-offset:2px}
 input[type=range]{width:100%;height:44px;accent-color:var(--accent)}
