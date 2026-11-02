@@ -31,6 +31,18 @@ Sur la page Réglages, un appui passe à la ligne suivante et un appui long chan
 | Veille | après 2 minutes sans mouvement, l'écran s'éteint et le GIF se met en pause. Un mouvement ou un appui le rallume. |
 | Diaporama | change de GIF toutes les 30 s, 1 min ou 5 min. |
 
+### Depuis un téléphone
+
+Va sur la page Téléphone, après le dernier écran, puis suis ce qui s'affiche :
+
+1. Scanne le premier QR code avec l'appareil photo et accepte le Wi-Fi proposé.
+2. Scanne le second QR code : ton navigateur ouvre la page « Mes écrans ».
+3. Ajoute une photo, une vidéo ou un texte, ou supprime un écran.
+
+Rien à installer et pas besoin d'internet. Le Wi-Fi ne reste allumé que sur cette page, et elle se ferme après 10 minutes sans téléphone connecté.
+
+### Depuis un ordinateur
+
 Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comme une clé USB. Copie tes `.gif` dans le dossier `gifs`, puis éjecte le disque.
 
 - Taille conseillée : 410 x 160 pixels.
@@ -39,7 +51,7 @@ Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comm
 
 ## Modifier
 
-Le code est dans `code/` (projet PlatformIO). Les réglages sont dans `code/include/reglages.h` : orientation, luminosité, durées, signature. Relance ensuite le fichier d'installation.
+Le code est dans `code/` (projet PlatformIO). Le site du téléphone est dans `code/web/` : après un changement, lance `python3 code/outils/make_web.py`. Les réglages sont dans `code/include/reglages.h` : orientation, luminosité, durées, signature. Relance ensuite le fichier d'installation.
 
 ## Licence
 

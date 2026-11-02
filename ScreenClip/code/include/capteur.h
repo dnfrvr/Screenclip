@@ -5,8 +5,8 @@
 
 #include "reglages.h"
 
-// Accéléromètre QMI8658. Les broches ne sont pas documentées sur la fiche produit :
-// on essaie les deux câblages possibles sur les GPIO libres de la carte.
+// Accéléromètre QMI8658, sur le bus I2C partagé avec la RTC (schéma Waveshare).
+// Sa sortie INT1 n'est pas reliée (R14 non montée) : il faut l'interroger.
 namespace capteur {
 constexpr uint8_t kRegWhoAmI = 0x00, kRegCtrl1 = 0x02, kRegCtrl2 = 0x03, kRegCtrl7 = 0x08;
 constexpr uint8_t kRegAccelX = 0x35, kRegReset = 0x60;
@@ -32,9 +32,8 @@ inline bool readRegs(uint8_t reg, uint8_t *out, size_t len) {
   return true;
 }
 
-inline bool probe(int sda, int scl) {
-  Wire.end();
-  if (!Wire.begin(sda, scl, 400000)) return false;
+inline bool probe() {
+  if (!Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL, 400000)) return false;
   Wire.setTimeOut(20);
   for (uint8_t candidate : {(uint8_t)0x6B, (uint8_t)0x6A}) {
     address = candidate;
@@ -53,7 +52,7 @@ inline bool configure() {
 }
 
 inline bool begin() {
-  present = (probe(PIN_I2C_A, PIN_I2C_B) || probe(PIN_I2C_B, PIN_I2C_A)) && configure();
+  present = probe() && configure();
   if (!present) Wire.end();
   return present;
 }

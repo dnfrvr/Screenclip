@@ -1,0 +1,262 @@
+<title>Mes écrans Screenclip</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Une page d'application au pouce : pile de barrettes, action principale fixée en bas. */
+:root{--bg:#f3f0f7;--surface:#fff;--ink:#231a33;--muted:#6c6280;--line:#ddd6e8;--accent:#c81e63;--on-accent:#fff;--soft:#fbe4ee;--bezel:#17121f;--danger:#b3261e;
+--font:ui-rounded,"SF Pro Rounded",-apple-system,"Roboto","Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17121f;--surface:#231b30;--ink:#f4eff9;--muted:#ab9fbd;--line:#3b3049;--accent:#ff5c9a;--on-accent:#2b0413;--soft:#43182e;--bezel:#000;--danger:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17121f;--surface:#231b30;--ink:#f4eff9;--muted:#ab9fbd;--line:#3b3049;--accent:#ff5c9a;--on-accent:#2b0413;--soft:#43182e;--bezel:#000;--danger:#ff8a80;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.4 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
+main{max-width:520px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px;display:flex;flex-direction:column;gap:16px}
+h1{font-size:30px;line-height:1.15;margin:0;font-weight:800;text-wrap:balance}
+h2{font-size:15px;margin:0 0 8px;font-weight:700}
+p{margin:0}.muted{color:var(--muted)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+button:focus-visible,textarea:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:center;gap:8px;min-height:44px}
+.back{width:44px;height:44px;margin-left:-10px;font-size:26px;line-height:1;border-radius:50%}
+.demo{background:var(--soft);padding:10px 12px;border-radius:12px;font-size:15px}
+.clip{background:var(--bezel);padding:8px;border-radius:22px;aspect-ratio:426/176;width:100%;max-width:100%;position:relative;overflow:hidden}
+.clip canvas,.clip img{display:block;width:100%;height:100%;border-radius:14px;object-fit:cover;background:#000}
+.clip canvas{touch-action:none}
+#list{display:flex;flex-direction:column;gap:14px}
+.item{position:relative}
+.del{position:absolute;right:12px;top:12px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:15px;font-weight:600}
+.empty{text-align:center;padding:36px 16px;border:2px dashed var(--line);border-radius:20px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar>div{max-width:488px;margin:0 auto;display:flex;gap:10px}
+.main{flex:1;min-height:54px;border-radius:16px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:18px}
+.main:disabled{opacity:.5}
+.choice{display:grid;gap:12px}
+.card{text-align:left;width:100%;background:var(--surface);padding:18px;border-radius:18px;border:1px solid var(--line);display:block}
+.card b{display:block;font-size:19px}
+textarea{width:100%;min-height:84px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.swatch{width:44px;height:44px;border-radius:50%;border:1px solid var(--line)}
+.swatch[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+input[type=range]{width:100%;height:44px;accent-color:var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(10,5,18,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:5}
+.box{background:var(--surface);border-radius:20px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px}
+.box .row{display:flex;gap:10px}
+.box button{flex:1;min-height:48px;border-radius:14px;background:var(--bg);font-weight:600}
+.box .danger{background:var(--danger);color:var(--surface)}
+progress{width:100%;height:10px;accent-color:var(--accent)}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));max-width:488px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;text-align:center;z-index:4}
+.err{color:var(--danger)}
+</style>
+<main>
+<section id="vHome">
+ <div style="display:flex;flex-direction:column;gap:16px">
+  <h1>Mes écrans</h1>
+  <p class="demo" id="demoNote" hidden>Démo : ces écrans sont des exemples et rien n'est envoyé vers une barrette.</p>
+  <p class="err" id="homeErr" hidden></p>
+  <div id="list"></div>
+ </div>
+</section>
+<section id="vAdd" hidden>
+ <div style="display:flex;flex-direction:column;gap:16px">
+  <div class="top"><button class="back" data-go="vHome" aria-label="Retour">‹</button><h1>Ajouter un écran</h1></div>
+  <div class="choice">
+   <label class="card" for="pick"><b>Photo ou vidéo</b><span class="muted">Choisis-la dans ton téléphone, puis cadre-la.</span></label>
+   <input id="pick" type="file" accept="image/*,video/*" hidden>
+   <button class="card" id="goText"><b>Texte</b><span class="muted">Écris un message et choisis ses couleurs.</span></button>
+  </div>
+ </div>
+</section>
+<section id="vText" hidden>
+ <div style="display:flex;flex-direction:column;gap:16px">
+  <div class="top"><button class="back" data-go="vAdd" aria-label="Retour">‹</button><h1>Ton texte</h1></div>
+  <div class="clip"><canvas id="tCanvas" width="410" height="160"></canvas></div>
+  <textarea id="tInput" aria-label="Ton message" maxlength="120">Coucou !</textarea>
+  <div><h2>Animation</h2><div class="chips" id="tAnim"></div></div>
+  <div><h2>Police</h2><div class="chips" id="tFont"></div></div>
+  <div><h2>Texte</h2><div class="chips" id="tFg"></div></div>
+  <div><h2>Fond</h2><div class="chips" id="tBg"></div></div>
+ </div>
+</section>
+<section id="vMedia" hidden>
+ <div style="display:flex;flex-direction:column;gap:16px">
+  <div class="top"><button class="back" data-go="vAdd" aria-label="Retour">‹</button><h1>Cadrage</h1></div>
+  <div class="clip"><canvas id="mCanvas" width="410" height="160"></canvas></div>
+  <p class="muted">Fais glisser l'image avec ton doigt pour la placer.</p>
+  <div><h2><label for="mZoom">Zoom</label></h2><input id="mZoom" type="range" min="1" max="4" step="0.01" value="1"></div>
+  <div id="mVideo" hidden>
+   <h2><label for="mStart">Début de la vidéo</label></h2><input id="mStart" type="range" min="0" max="1" step="0.1" value="0">
+   <h2>Durée</h2><div class="chips" id="mDur"></div>
+  </div>
+ </div>
+</section>
+</main>
+<div class="bar" id="bar"><div><button class="main" id="action">Ajouter un écran</button></div></div>
+<div class="overlay" id="busy" hidden><div class="box" role="status"><b id="busyTitle">Préparation…</b><progress id="busyBar" max="1" value="0"></progress><p class="muted">Garde cette page ouverte.</p></div></div>
+<div class="overlay" id="ask" hidden><div class="box" role="dialog" aria-modal="true"><b>Supprimer cet écran ?</b><p class="muted">Il disparaîtra de la barrette.</p><div class="row"><button id="askNo">Garder</button><button id="askYes" class="danger">Supprimer</button></div></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>/*GIFENC*/</script>
+<script>
+(()=>{
+const W=410,H=160,MAX=6*1024*1024,MAXW=1024;
+const $=id=>document.getElementById(id);
+const DEMO=location.hostname!=='192.168.4.1'&&!location.search.includes('api');
+const OFFLINE='La barrette ne répond plus. Vérifie que ton téléphone est toujours sur son Wi-Fi, puis réessaie.';
+const {GIFEncoder,quantize,applyPalette}=window.gifenc;
+
+/* Accès aux écrans : la barrette, ou une mémoire locale en démo. */
+const demoItems=[];
+const api={
+ async list(){
+  if(DEMO)return demoItems.map(d=>({chemin:d.chemin,url:d.url}));
+  const r=await fetch('/api/ecrans');if(!r.ok)throw 0;
+  return (await r.json()).ecrans.map(e=>({chemin:e.chemin,url:'/api/fichier?chemin='+encodeURIComponent(e.chemin)}));
+ },
+ async remove(chemin){
+  if(DEMO){demoItems.splice(demoItems.findIndex(d=>d.chemin===chemin),1);return}
+  const r=await fetch('/api/supprimer?chemin='+encodeURIComponent(chemin),{method:'POST'});if(!r.ok)throw 0;
+ },
+ upload(blob,onp){
+  if(DEMO){demoItems.push({chemin:'demo'+Date.now(),url:URL.createObjectURL(blob)});return new Promise(ok=>{let p=0;const t=setInterval(()=>{p+=.2;onp(p);if(p>=1){clearInterval(t);ok()}},60)})}
+  return new Promise((ok,ko)=>{const x=new XMLHttpRequest(),f=new FormData();f.append('fichier',blob,'ecran.gif');
+   x.open('POST','/api/ecrans');x.upload.onprogress=e=>e.lengthComputable&&onp(e.loaded/e.total);
+   x.onload=()=>x.status===200?ok():ko(new Error(x.status===507?'La carte mémoire est pleine. Supprime un écran, puis réessaie.':'La barrette a refusé cet écran. Réessaie.'));
+   x.onerror=()=>ko(new Error(OFFLINE));x.send(f)});
+ }
+};
+
+/* Navigation */
+let view='vHome';
+const views=['vHome','vAdd','vText','vMedia'];
+function go(v){view=v;views.forEach(x=>$(x).hidden=x!==v);
+ const bar={vHome:'Ajouter un écran',vText:'Envoyer sur la barrette',vMedia:'Envoyer sur la barrette'}[v];
+ $('bar').hidden=!bar;if(bar)$('action').textContent=bar;
+ if(v!=='vMedia')stopMedia();if(v==='vText')drawText();if(v==='vHome')refresh();window.scrollTo(0,0)}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500)}
+
+/* Liste : une image à la fois, la barrette ne sert qu'un fichier à la fois. */
+async function refresh(){
+ const box=$('list');$('homeErr').hidden=true;let items;
+ try{items=await api.list()}catch(e){$('homeErr').textContent=OFFLINE;$('homeErr').hidden=false;return}
+ box.replaceChildren();
+ if(!items.length){const d=document.createElement('p');d.className='empty muted';d.textContent='Aucun écran pour l\'instant. Ajoute ta première image.';box.append(d);return}
+ const imgs=items.map(it=>{const w=document.createElement('div');w.className='item';
+  const c=document.createElement('div');c.className='clip';const i=document.createElement('img');i.alt='Écran';c.append(i);
+  const b=document.createElement('button');b.className='del';b.textContent='Supprimer';b.onclick=()=>askDelete(it.chemin);
+  w.append(c,b);box.append(w);return [i,it.url]});
+ for(const [i,u] of imgs)await new Promise(ok=>{i.onload=i.onerror=ok;i.src=u});
+}
+let toDelete=null;
+function askDelete(c){toDelete=c;$('ask').hidden=false}
+$('askNo').onclick=()=>$('ask').hidden=true;
+$('askYes').onclick=async()=>{$('ask').hidden=true;try{await api.remove(toDelete);toast('Écran supprimé');refresh()}catch(e){toast(OFFLINE)}};
+
+/* Encodage GIF */
+const tick=()=>new Promise(r=>setTimeout(r));
+async function encode(images,delay,onp){
+ const g=GIFEncoder();
+ for(let i=0;i<images.length;i++){const d=images[i].data||images[i];
+  const pal=quantize(d,256,{format:'rgb565'});g.writeFrame(applyPalette(d,pal,'rgb565'),W,H,{palette:pal,delay:Array.isArray(delay)?delay[i]:delay});
+  onp((i+1)/images.length);await tick()}
+ g.finish();return new Blob([g.bytes()],{type:'image/gif'});
+}
+function busy(t,v){$('busy').hidden=false;$('busyTitle').textContent=t;$('busyBar').value=v}
+async function send(blob){
+ busy('Envoi sur la barrette…',0);
+ try{await api.upload(blob,p=>busy('Envoi sur la barrette…',p));$('busy').hidden=true;toast('Écran ajouté');go('vHome')}
+ catch(e){$('busy').hidden=true;toast(e.message||OFFLINE)}
+}
+
+/* Texte */
+const COLORS=['#ffffff','#17121f','#ff4f9a','#ffd23f','#3dd6a3','#3b82f6','#8b5cf6','#ff6b35'];
+const FONTS=[['Simple','800 %px -apple-system,Roboto,sans-serif'],['Élégante','italic 700 %px Georgia,"Noto Serif",serif'],['Machine','700 %px ui-monospace,Menlo,"Roboto Mono",monospace']];
+const ANIMS=[['fixe','Fixe'],['defile','Défilement'],['clignote','Clignotement'],['machine','Machine à écrire']];
+const T={text:'Coucou !',anim:'fixe',font:0,fg:'#ffffff',bg:'#ff4f9a'};
+const fontOf=(s,px)=>FONTS[s.font][1].replace('%',px);
+function fit(ctx,s,lines){let px=120;for(;px>14;px-=2){ctx.font=fontOf(s,px);
+ if(lines.length*px*1.15<=H-20&&Math.max(...lines.map(l=>ctx.measureText(l).width))<=W-28)break}return px}
+function paint(ctx,s,lines,px,x,alpha=1){ctx.fillStyle=s.bg;ctx.fillRect(0,0,W,H);ctx.globalAlpha=alpha;ctx.fillStyle=s.fg;ctx.font=fontOf(s,px);ctx.textBaseline='middle';ctx.textAlign=x===null?'center':'left';
+ lines.forEach((l,i)=>ctx.fillText(l,x===null?W/2:x,H/2+(i-(lines.length-1)/2)*px*1.15));ctx.globalAlpha=1}
+function textScene(ctx,s){
+ const lines=(s.text.trim()||' ').split('\n').slice(0,4);
+ if(s.anim==='defile'){const one=lines.join('   ');const px=96;ctx.font=fontOf(s,px);const w=ctx.measureText(one).width;const step=10,count=Math.min(150,Math.ceil((w+W)/step));
+  return{count,delay:66,draw:i=>paint(ctx,s,[one],px,W-i*step)}}
+ const px=fit(ctx,s,lines);
+ if(s.anim==='clignote')return{count:2,delay:500,draw:i=>paint(ctx,s,lines,px,null,i?0:1)};
+ if(s.anim==='machine'){const full=lines.join('\n'),n=Math.min(full.length,40),hold=8;
+  return{count:n+hold,delay:90,draw:i=>{const k=Math.ceil(Math.min(i+1,n)*full.length/n);const part=full.slice(0,k).split('\n');paint(ctx,s,part.concat(Array(lines.length-part.length).fill('')),px,null)}}}
+ return{count:1,delay:1000,draw:()=>paint(ctx,s,lines,px,null)};
+}
+const tctx=$('tCanvas').getContext('2d',{willReadFrequently:true});
+let tTimer;
+function drawText(){clearTimeout(tTimer);const sc=textScene(tctx,T);let i=0;(function loop(){sc.draw(i);i=(i+1)%sc.count;if(sc.count>1&&view==='vText')tTimer=setTimeout(loop,sc.delay)})()}
+function chips(box,items,get,set){const el=$(box);items.forEach(([v,label])=>{const b=document.createElement('button');b.className='chip';b.textContent=label;b.onclick=()=>{set(v);sync()};el.append(b);b.dataset.v=v});
+ const sync=()=>{[...el.children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===String(get())))};sync()}
+function swatches(box,key){const el=$(box);COLORS.forEach(c=>{const b=document.createElement('button');b.className='swatch';b.style.background=c;b.setAttribute('aria-label','Couleur '+c);b.onclick=()=>{T[key]=c;sync();drawText()};b.dataset.v=c;el.append(b)});
+ const sync=()=>[...el.children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===T[key]));sync()}
+chips('tAnim',ANIMS,()=>T.anim,v=>{T.anim=v;drawText()});
+chips('tFont',FONTS.map((f,i)=>[i,f[0]]),()=>T.font,v=>{T.font=+v;drawText()});
+swatches('tFg','fg');swatches('tBg','bg');
+$('tInput').oninput=e=>{T.text=e.target.value;drawText()};
+$('goText').onclick=()=>go('vText');
+async function textGif(s,onp=()=>{}){const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});const sc=textScene(x,s);
+ const imgs=[];for(let i=0;i<sc.count;i++){sc.draw(i);imgs.push(x.getImageData(0,0,W,H));}
+ return encode(imgs,sc.delay,onp)}
+
+/* Photo et vidéo */
+const mctx=$('mCanvas').getContext('2d',{willReadFrequently:true});
+const M={src:null,video:false,sw:1,sh:1,x:.5,y:.5,zoom:1,start:0,dur:4,url:null,raf:0,gifFile:null};
+const DURS=[[2,'2 s'],[4,'4 s'],[6,'6 s']];
+function drawCrop(ctx=mctx){const k=Math.max(W/M.sw,H/M.sh)*M.zoom,dw=M.sw*k,dh=M.sh*k;ctx.drawImage(M.src,(W-dw)*M.x,(H-dh)*M.y,dw,dh)}
+function stopMedia(){cancelAnimationFrame(M.raf);if(M.video&&M.src)M.src.pause()}
+function clearMedia(){stopMedia();if(M.url)URL.revokeObjectURL(M.url);M.src=null;M.url=null;M.gifFile=null}
+function liveVideo(){const v=M.src;if(view!=='vMedia'||!M.video)return;if(v.currentTime>=M.start+M.dur||v.currentTime<M.start)v.currentTime=M.start;drawCrop();M.raf=requestAnimationFrame(liveVideo)}
+function seek(v,t){return new Promise(ok=>{let done=false;const f=()=>{if(!done){done=true;v.removeEventListener('seeked',f);ok()}};v.addEventListener('seeked',f);v.currentTime=t;setTimeout(f,1500)})}
+$('pick').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;clearMedia();
+ M.url=URL.createObjectURL(f);M.x=M.y=.5;M.zoom=1;$('mZoom').value=1;M.start=0;
+ try{
+  if(f.type==='image/gif'&&f.size<=MAX){const i=await loadImage(M.url);if(i.naturalWidth<=MAXW)M.gifFile=f}
+  if(f.type.startsWith('video/')||/\.(mov|mp4|m4v|webm)$/i.test(f.name)){
+   const v=document.createElement('video');v.muted=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=M.url;
+   await new Promise((ok,ko)=>{v.onloadeddata=ok;v.onerror=ko;setTimeout(ko,15000)});
+   M.src=v;M.video=true;M.sw=v.videoWidth;M.sh=v.videoHeight;$('mStart').max=Math.max(0,v.duration-1);$('mStart').value=0;$('mVideo').hidden=false;
+   go('vMedia');v.play().catch(()=>{});liveVideo();
+  }else{const i=await loadImage(M.url);M.src=i;M.video=false;M.sw=i.naturalWidth;M.sh=i.naturalHeight;$('mVideo').hidden=true;go('vMedia');drawCrop()}
+ }catch(err){clearMedia();toast('Ce fichier ne s\'ouvre pas sur ce téléphone. Essaie une autre photo ou vidéo.')}
+};
+function loadImage(u){return new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=u})}
+$('mZoom').oninput=e=>{M.zoom=+e.target.value;M.gifFile=null;if(!M.video)drawCrop()};
+$('mStart').oninput=e=>{M.start=+e.target.value;if(M.src)M.src.currentTime=M.start};
+chips('mDur',DURS,()=>M.dur,v=>{M.dur=+v});
+{const c=$('mCanvas');let p=null;
+ c.onpointerdown=e=>{p=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};
+ c.onpointermove=e=>{if(!p)return;const r=c.getBoundingClientRect(),k=Math.max(W/M.sw,H/M.sh)*M.zoom,sx=W/r.width;
+  const free=(a,b)=>Math.max(1,a-b);
+  M.x=Math.min(1,Math.max(0,M.x+(e.clientX-p[0])*sx/free(M.sw*k,W)));M.y=Math.min(1,Math.max(0,M.y+(e.clientY-p[1])*sx/free(M.sh*k,H)));
+  p=[e.clientX,e.clientY];M.gifFile=null;if(!M.video)drawCrop()};
+ c.onpointerup=c.onpointercancel=()=>p=null}
+async function mediaGif(){
+ if(M.gifFile)return M.gifFile;
+ const prep=v=>busy('Préparation…',v);
+ if(!M.video){drawCrop();return encode([mctx.getImageData(0,0,W,H)],1000,prep)}
+ const v=M.src;stopMedia();const fps=12,n=Math.max(1,Math.round(M.dur*fps));const imgs=[];
+ for(let i=0;i<n;i++){const t=M.start+i/fps;if(t>=v.duration)break;await seek(v,t);drawCrop();imgs.push(mctx.getImageData(0,0,W,H));prep(.5*(i+1)/n)}
+ /* Si le GIF dépasse la limite de la barrette, on garde moins d'images. */
+ for(const skip of [1,2,3,4]){const part=imgs.filter((_,i)=>i%skip===0);const b=await encode(part,Math.round(1000*skip/fps),p=>prep(.5+.5*p));if(b.size<=MAX)return b}
+ throw new Error('Cette vidéo est trop lourde. Choisis une durée plus courte.');
+}
+$('action').onclick=async()=>{
+ if(view==='vHome')return go('vAdd');
+ try{busy('Préparation…',0);const b=view==='vText'?await textGif(T,p=>busy('Préparation…',p)):await mediaGif();await send(b);if(view==='vHome')clearMedia()}
+ catch(e){$('busy').hidden=true;toast(e.message||'La préparation a échoué. Réessaie.');if(view==='vMedia'&&M.video){M.src.play().catch(()=>{});liveVideo()}}
+};
+
+/* Démarrage */
+(async()=>{
+ go('vHome');$('demoNote').hidden=!DEMO;
+ if(DEMO){for(const s of [{text:'Bonne fête !',anim:'defile',font:1,fg:'#ffd23f',bg:'#17121f'},{text:'Coucou\ntoi',anim:'clignote',font:0,fg:'#ffffff',bg:'#ff4f9a'}]){const b=await textGif(s);demoItems.push({chemin:'x'+demoItems.length,url:URL.createObjectURL(b)})}refresh()}
+})();
+})();
+</script>

@@ -17,6 +17,7 @@
 #define SLIDESHOW_DEFAULT_INDEX 0
 
 #define SLEEP_AFTER_S 120
+#define PHONE_IDLE_S 600
 #define SENSOR_PERIOD_MS 100
 #define ROTATE_HOLD_MS 600
 #define ROTATE_MIN_TILT_G 0.5f
@@ -50,8 +51,8 @@
 
 #define PIN_BATTERY_ADC 4
 
-#define PIN_I2C_A 15
-#define PIN_I2C_B 7
+#define PIN_I2C_SDA 15
+#define PIN_I2C_SCL 7
 
 #define PIN_LCD_CS 0
 #define PIN_LCD_SCK 2

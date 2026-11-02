@@ -19,6 +19,7 @@
 #include "texte.h"
 #include "cle_usb.h"
 #include "vista.h"
+#include "telephone.h"
 
 namespace {
 RgbDisplay display;
@@ -89,6 +90,8 @@ orientation::Tracker tracker(ROTATE_MIN_TILT_G, ROTATE_DOMINANCE, ROTATE_HOLD_MS
 orientation::Motion motion(MOTION_THRESHOLD_G);
 uint8_t rotationForPosition[4] = {0, 1, 2, 3};
 int currentPosition = -1;
+
+void noteActivity() { lastActivityAt = millis(); }
 
 void setBacklight(uint8_t level) {
   ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, level ? 255 - level : 256);
@@ -393,7 +396,8 @@ uint32_t lastRetryAt = 0;
 void loadLibrary();
 
 int gifSlots() { return gifFiles.empty() ? 1 : (int)gifFiles.size(); }
-int pageCount() { return kGifBase + gifSlots(); }
+int pageCount() { return kGifBase + gifSlots() + 1; }
+bool isPhoneIndex(int index) { return index == kGifBase + gifSlots(); }
 bool isHelpIndex(int index) { return HELP_ENABLED && index == 0; }
 
 void setFullSpeed(bool full) {
@@ -405,12 +409,87 @@ void setFullSpeed(bool full) {
   }
 }
 
+void showPage(int index, int dir, bool quiet = false);
+
 void showNoGifMessage() {
   if (!sdMounted) showMessage("Pas de carte SD", "Insère une carte microSD");
-  else showMessage("Aucun GIF", "Copie des .gif sur la carte SD");
+  else showMessage("Aucun écran", "Appuie sur le bouton pour en ajouter");
 }
 
-void showPage(int index, int dir, bool quiet = false) {
+bool phonePage = false;
+int phoneStep = -1;
+uint32_t phoneActiveAt = 0;
+String phoneSsid, phonePassword;
+
+void loadPhoneIdentity() {
+  phonePassword = prefs.getString("wifipass", "");
+  if (phonePassword.length() != 8) {
+    char digits[9];
+    snprintf(digits, sizeof(digits), "%08lu", (unsigned long)(esp_random() % 100000000UL));
+    phonePassword = digits;
+    prefs.putString("wifipass", phonePassword);
+  }
+  char name[20];
+  const uint64_t mac = ESP.getEfuseMac();
+  snprintf(name, sizeof(name), "Screenclip-%02X%02X", (unsigned)((mac >> 32) & 0xFF), (unsigned)((mac >> 40) & 0xFF));
+  phoneSsid = name;
+}
+
+void onPhoneLibraryChanged() {
+  loadGifList();
+  currentIndex = kGifBase + gifSlots();
+}
+
+void drawPhonePage(int step) {
+  vista::background(ui);
+  if (step == 0) {
+    static const char *const lines[] = {"1. Ouvre l'appareil photo du téléphone", "2. Vise ce code", "3. Accepte le Wi-Fi proposé"};
+    const String code = "WIFI:T:WPA;S:" + phoneSsid + ";P:" + phonePassword + ";;";
+    telephone::drawQr(ui, 16, 16, 288, code.c_str());
+    vista::drawPhoneText(ui, 330, "Ajoute tes écrans", lines, 3);
+    const String manual = phoneSsid + "  mot de passe " + phonePassword;
+    drawText(ui, kFontVistaText, 330, 286, 0x2965, manual.c_str());
+  } else {
+    static const char *const lines[] = {"Vise ce nouveau code", "pour ouvrir ta page.", "Tu y verras tous tes écrans."};
+    telephone::drawQr(ui, 16, 16, 288, telephone::kUrl);
+    vista::drawPhoneText(ui, 330, "C'est connecté !", lines, 3);
+    drawText(ui, kFontVistaText, 330, 286, 0x2965, "Ou tape 192.168.4.1 dans le navigateur");
+  }
+  showUi();
+}
+
+void enterPhone() {
+  if (phonePage) return;
+  phonePage = true;
+  phoneStep = -1;
+  phoneActiveAt = millis();
+  if (!telephone::start(phoneSsid, phonePassword, &gifFiles, onPhoneLibraryChanged)) {
+    phonePage = false;
+    messagePage = true;
+    lastRetryAt = millis();
+    showMessage("Wi-Fi indisponible", "Redémarre la barrette");
+  }
+}
+
+void leavePhone() {
+  if (!phonePage) return;
+  phonePage = false;
+  telephone::stop();
+}
+
+void servePhone() {
+  telephone::loop();
+  const int step = telephone::clients() > 0 ? 1 : 0;
+  if (step == 1) phoneActiveAt = millis();
+  noteActivity();
+  if (step != phoneStep) {
+    phoneStep = step;
+    drawPhonePage(step);
+  }
+  if (millis() - phoneActiveAt > PHONE_IDLE_S * 1000UL) showPage(kGifBase, 1, true);
+}
+
+void showPage(int index, int dir, bool quiet) {
   if (!quiet) showBatteryOverlay(BATTERY_OVERLAY_MS);
   pageShownAt = millis();
   bool reloaded = false;
@@ -418,6 +497,14 @@ void showPage(int index, int dir, bool quiet = false) {
   for (int tries = 0; tries <= pageCount() + 1; ++tries) {
     const int count = pageCount();
     currentIndex = ((index % count) + count) % count;
+    if (isPhoneIndex(currentIndex)) {
+      closeGif();
+      setFullSpeed(true);
+      messagePage = helpPage = false;
+      enterPhone();
+      return;
+    }
+    leavePhone();
     if (isHelpIndex(currentIndex)) {
       closeGif();
       setFullSpeed(false);
@@ -462,7 +549,8 @@ void showPage(int index, int dir, bool quiet = false) {
 
 void step(int dir) {
   helpLeaveAt = 0;
-  if (pageCount() > 0) showPage(currentIndex + dir, dir);
+  if (phonePage && dir > 0) showPage(kGifBase, 1);
+  else showPage(currentIndex + dir, dir);
 }
 
 int savedIndex() {
@@ -560,6 +648,7 @@ void drawSettingsPage() {
 }
 
 void openSettings() {
+  leavePhone();
   closeGif();
   setFullSpeed(false);
   settingsPage = true;
@@ -586,8 +675,6 @@ void changeSetting() {
     prefs.putUChar("diapo", slideIndex);
   }
 }
-
-void noteActivity() { lastActivityAt = millis(); }
 
 void enterSleep() {
   sleeping = true;
@@ -645,7 +732,7 @@ void advanceSlideshow() {
   const int seconds = kSlideSeconds[slideIndex];
   if (!seconds || !gifOpen || gifFiles.size() < 2) return;
   if (millis() - pageShownAt < seconds * 1000UL) return;
-  const int next = currentIndex + 1 >= pageCount() ? kGifBase : currentIndex + 1;
+  const int next = currentIndex + 1 >= kGifBase + gifSlots() ? kGifBase : currentIndex + 1;
   showPage(next, 1, true);
 }
 
@@ -701,6 +788,7 @@ uint32_t transferStartMs = 0;
 void enterTransfer() {
   if (sleeping) wakeUp();
   settingsPage = false;
+  leavePhone();
   closeGif();
   setFullSpeed(true);
   overlayUntil = 0;
@@ -765,6 +853,7 @@ void setup() {
     prefs.getBytes("rotmap", rotationForPosition, sizeof(rotationForPosition));
   }
   capteur::begin();
+  loadPhoneIdentity();
   noteActivity();
 
   for (int i = 0; i < 4; ++i) battery::update(true);
@@ -797,6 +886,12 @@ void loop() {
   if (settingsPage) {
     if (millis() - settingsTouchedAt > SETTINGS_TIMEOUT_MS) closeSettings();
     delay(20);
+    return;
+  }
+
+  if (phonePage) {
+    servePhone();
+    delay(1);
     return;
   }
 

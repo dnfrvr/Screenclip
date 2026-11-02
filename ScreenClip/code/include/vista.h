@@ -137,17 +137,26 @@ inline void drawHelp(Canvas &c) {
       {"Appui long", "image précédente"},
       {"Deux appuis", "tourne l'écran"},
       {"Appui de 2 secondes", "ouvre les réglages"},
+      {"Page Téléphone", "ajoute ou supprime tes écrans"},
       {"Branchée à un ordinateur", "devient une clé USB pour tes GIF"},
   };
   background(c);
   const int left = 56;
   drawText(c, kFontVistaTitle, left, 80, kBlue, "Mode d'emploi");
   c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
-  for (int i = 0; i < 5; ++i) {
-    const int y = 142 + i * 37;
+  for (int i = 0; i < 6; ++i) {
+    const int y = 136 + i * 33;
     drawText(c, kFontVistaText, left, y, kBlue, kRows[i][0]);
     drawText(c, kFontVistaText, left + 320, y, kInk, kRows[i][1]);
   }
+}
+
+// Colonne de droite de la page Téléphone : le QR code occupe la gauche.
+inline void drawPhoneText(Canvas &c, int x, const char *title, const char *const *lines, int count) {
+  constexpr uint16_t kBlue = 0x2B97;
+  constexpr uint16_t kInk = 0x2965;
+  drawText(c, kFontVistaMedium, x, 76, kBlue, title);
+  for (int i = 0; i < count; ++i) drawText(c, kFontVistaText, x, 134 + i * 36, kInk, lines[i]);
 }
 
 struct SettingRow {
