@@ -628,6 +628,7 @@ void rotateScreen() {
 }
 
 bool settingsPage = false;
+constexpr int kSettingsRows = 4;
 int settingsRow = 0;
 uint32_t settingsTouchedAt = 0;
 
@@ -639,8 +640,9 @@ void drawSettingsPage() {
       {"Rotation automatique", capteur::present ? onOff[autoRotate] : missing},
       {"Veille", capteur::present ? onOff[sleepEnabled] : missing},
       {"Diaporama", slides[slideIndex]},
+      {"Ajouter des écrans", "ouvrir"},
   };
-  vista::drawSettings(ui, rows, 3, settingsRow);
+  vista::drawSettings(ui, rows, kSettingsRows, settingsRow);
   showUi();
 }
 
@@ -670,6 +672,9 @@ void changeSetting() {
   } else if (settingsRow == 2) {
     slideIndex = (slideIndex + 1) % kSlideChoices;
     prefs.putUChar("diapo", slideIndex);
+  } else if (settingsRow == 3) {
+    settingsPage = false;
+    showPage(kGifBase + gifSlots(), 1, true);
   }
 }
 
@@ -752,8 +757,8 @@ void handleBootButton() {
     if (settingsPage) {
       settingsTouchedAt = millis();
       if (event.heldMs >= LONG_PRESS_MS) changeSetting();
-      else settingsRow = (settingsRow + 1) % 3;
-      drawSettingsPage();
+      else settingsRow = (settingsRow + 1) % kSettingsRows;
+      if (settingsPage) drawSettingsPage();
       continue;
     }
     if (event.heldMs >= LONG_PRESS_MS) {

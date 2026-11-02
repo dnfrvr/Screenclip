@@ -109,12 +109,10 @@ inline void drawHelp(Canvas &c) {
       {"Appui long", "image précédente"},
       {"Deux appuis", "tourne l'écran"},
       {"Appui de 2 s", "ouvre les réglages"},
-      {"Page Téléphone", "ajoute ou supprime tes écrans"},
-      {"Sur un ordinateur", "devient une clé USB"},
   };
   window(c, "Mode d'emploi");
-  for (int i = 0; i < 6; ++i) {
-    const int y = 92 + i * 41;
+  for (int i = 0; i < 4; ++i) {
+    const int y = 110 + i * 52;
     drawText(c, kFontUi, kLeft, y, kDeepPink, kRows[i][0]);
     drawText(c, kFontUi, 300, y, kMoss, kRows[i][1]);
   }
@@ -135,12 +133,12 @@ struct SettingRow {
 inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selected) {
   window(c, "Réglages");
   for (int i = 0; i < count; ++i) {
-    const int y = 110 + i * 50;
+    const int y = 94 + i * 46;
     const bool on = i == selected;
-    if (on) c.fillRect(0, y - 34, c.w, 46, kInk);
+    if (on) c.fillRect(0, y - 32, c.w, 44, kInk);
     drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
     drawText(c, kFontUi, 370, y, on ? kPaper : kMoss, rows[i].value);
   }
-  drawText(c, kFontUi, kLeft, 300, kMoss, "Appui : ligne suivante   Appui long : changer");
+  drawText(c, kFontUi, kLeft, 300, kMoss, "Appui : ligne suivante   Appui long : valider");
 }
 }

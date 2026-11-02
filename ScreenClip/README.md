@@ -23,7 +23,7 @@ Tout se fait avec le bouton BOOT :
 | Deux appuis | tourne l'image de 90° |
 | Appui de 2 secondes | ouvre ou ferme les réglages |
 
-Sur la page Réglages, un appui passe à la ligne suivante et un appui long change la valeur. Elle se ferme seule après 15 secondes.
+Sur la page Réglages, un appui passe à la ligne suivante et un appui long change la valeur ou ouvre la ligne choisie. Elle se ferme seule après 15 secondes.
 
 | Réglage | Effet |
 |---|---|
@@ -33,7 +33,7 @@ Sur la page Réglages, un appui passe à la ligne suivante et un appui long chan
 
 ### Depuis un téléphone
 
-Va sur la page Téléphone, après le dernier écran, puis suis ce qui s'affiche :
+Ouvre les réglages (appui de 2 secondes), choisis « Ajouter des écrans », puis suis ce qui s'affiche. La même page se trouve aussi après le dernier écran.
 
 1. Scanne le premier QR code avec l'appareil photo et accepte le Wi-Fi proposé.
 2. Scanne le second QR code : ton navigateur ouvre la page « Mes écrans ».
