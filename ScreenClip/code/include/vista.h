@@ -106,9 +106,9 @@ inline void drawMessage(Canvas &c, const char *title, const char *text, int32_t 
 inline void drawHelp(Canvas &c) {
   static const char *const kRows[][2] = {
       {"Appui court", "écran suivant"},
+      {"Deux appuis", "écran précédent"},
       {"Appui long", "ouvre les réglages"},
-      {"Dans les réglages", "appui court : ligne suivante"},
-      {"", "appui long : valider"},
+      {"Dans les réglages", "court : ligne suivante, long : valider"},
   };
   window(c, "Mode d'emploi");
   for (int i = 0; i < 4; ++i) {

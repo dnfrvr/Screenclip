@@ -121,6 +121,7 @@ void initBacklight(uint8_t level) {
 
 struct ButtonEvent {
   bool isLong;
+  uint32_t at;
 };
 QueueHandle_t bootEvents = nullptr;
 volatile bool bootDown = false;
@@ -140,12 +141,12 @@ void bootButtonTask(void *) {
         pressedAt = now;
         longSent = false;
       } else if (!longSent) {
-        const ButtonEvent event = {false};
+        const ButtonEvent event = {false, now};
         xQueueSend(bootEvents, &event, 0);
       }
     } else if (pressed && !longSent && now - pressedAt >= LONG_PRESS_MS) {
       longSent = true;
-      const ButtonEvent event = {true};
+      const ButtonEvent event = {true, now};
       xQueueSend(bootEvents, &event, 0);
     }
     vTaskDelay(pdMS_TO_TICKS(4));
@@ -782,6 +783,8 @@ void advanceSlideshow() {
 }
 
 void handleBootButton() {
+  static bool pending = false;
+  static uint32_t pendingAt = 0;
   ButtonEvent event;
   while (xQueueReceive(bootEvents, &event, 0) == pdTRUE) {
     noteActivity();
@@ -789,15 +792,28 @@ void handleBootButton() {
       swallowRelease = false;
       continue;
     }
-    if (!settingsPage) {
-      if (event.isLong) openSettings();
-      else step(+1);
-      continue;
+    if (settingsPage) {
+      settingsTouchedAt = millis();
+      if (event.isLong) changeSetting();
+      else settingsRow = (settingsRow + 1) % kSettingsRows;
+      if (settingsPage) drawSettingsPage();
+    } else if (event.isLong) {
+      pending = false;
+      openSettings();
+    } else if (pending && event.at - pendingAt <= DOUBLE_CLICK_MS) {
+      pending = false;
+      step(-1);
+    } else {
+      if (pending) step(+1);
+      pending = true;
+      pendingAt = event.at;
     }
-    settingsTouchedAt = millis();
-    if (event.isLong) changeSetting();
-    else settingsRow = (settingsRow + 1) % kSettingsRows;
-    if (settingsPage) drawSettingsPage();
+  }
+
+  // Un appui seul n'agit qu'une fois écarté un éventuel second appui.
+  if (pending && !bootDown && millis() - pendingAt > DOUBLE_CLICK_MS) {
+    pending = false;
+    step(+1);
   }
 }
 

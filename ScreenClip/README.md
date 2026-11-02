@@ -19,6 +19,7 @@ Tout se fait avec le bouton BOOT :
 | Geste | Action |
 |---|---|
 | Appui court | écran suivant |
+| Deux appuis | écran précédent |
 | Appui long (1 seconde) | ouvre les réglages |
 
 Dans les réglages, un appui court passe à la ligne suivante et un appui long valide. La ligne Quitter les ferme, et ils se ferment seuls après 15 secondes.
