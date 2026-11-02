@@ -105,10 +105,10 @@ inline void drawMessage(Canvas &c, const char *title, const char *text, int32_t 
 
 inline void drawHelp(Canvas &c) {
   static const char *const kRows[][2] = {
-      {"Un appui", "image suivante"},
-      {"Appui long", "image précédente"},
-      {"Deux appuis", "tourne l'écran"},
-      {"Appui de 2 s", "ouvre les réglages"},
+      {"Appui court", "écran suivant"},
+      {"Appui long", "ouvre les réglages"},
+      {"Dans les réglages", "appui court : ligne suivante"},
+      {"", "appui long : valider"},
   };
   window(c, "Mode d'emploi");
   for (int i = 0; i < 4; ++i) {
@@ -140,12 +140,12 @@ struct SettingRow {
 inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selected) {
   window(c, "Réglages");
   for (int i = 0; i < count; ++i) {
-    const int y = 94 + i * 46;
+    const int y = 86 + i * 36;
     const bool on = i == selected;
-    if (on) c.fillRect(0, y - 32, c.w, 44, kInk);
+    if (on) c.fillRect(0, y - 26, c.w, 36, kInk);
     drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
     drawText(c, kFontUi, 370, y, on ? kPaper : kMoss, rows[i].value);
   }
-  drawText(c, kFontUi, kLeft, 300, kMoss, "Appui : ligne suivante   Appui long : valider");
+  drawText(c, kFontUi, kLeft, 306, kMoss, "Appui court : ligne suivante   Appui long : valider");
 }
 }

@@ -18,22 +18,21 @@ Tout se fait avec le bouton BOOT :
 
 | Geste | Action |
 |---|---|
-| Un appui | image suivante |
-| Appui long | image précédente |
-| Deux appuis | tourne l'image de 90° |
-| Appui de 2 secondes | ouvre ou ferme les réglages |
+| Appui court | écran suivant |
+| Appui long (1 seconde) | ouvre les réglages |
 
-Sur la page Réglages, un appui passe à la ligne suivante et un appui long change la valeur ou ouvre la ligne choisie. Elle se ferme seule après 15 secondes.
+Dans les réglages, un appui court passe à la ligne suivante et un appui long valide. La ligne Quitter les ferme, et ils se ferment seuls après 15 secondes.
 
 | Réglage | Effet |
 |---|---|
-| Rotation automatique | l'image suit le sens de la barrette. Si elle est de travers dans une position, deux appuis la corrigent et la barrette retient cette position. |
+| Rotation automatique | l'image suit le sens de la barrette. Si elle est de travers dans une position, la ligne Tourner l'écran la corrige et la barrette retient cette position. |
+| Tourner l'écran | tourne l'image de 90°. |
 | Veille | après 2 minutes sans mouvement, une petite étoile se déplace sur fond noir avec un rétroéclairage faible. L'écran s'éteint 5 minutes plus tard. Un mouvement ou un appui le rallume. |
 | Diaporama | change de GIF toutes les 30 s, 1 min ou 5 min. |
 
 ### Depuis un téléphone
 
-Ouvre les réglages (appui de 2 secondes), choisis « Ajouter des écrans », puis suis ce qui s'affiche.
+Ouvre les réglages (appui long), choisis « Ajouter des écrans », puis suis ce qui s'affiche.
 
 1. Scanne le premier QR code avec l'appareil photo et accepte le Wi-Fi proposé.
 2. Scanne le second QR code : ton navigateur ouvre la page « Mes écrans ».

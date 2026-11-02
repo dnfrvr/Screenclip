@@ -120,14 +120,14 @@ void initBacklight(uint8_t level) {
 }
 
 struct ButtonEvent {
-  uint32_t heldMs;
-  uint32_t releasedAt;
+  bool isLong;
 };
 QueueHandle_t bootEvents = nullptr;
 volatile bool bootDown = false;
 
+// Un appui long agit dès que le délai est atteint, sans attendre le relâchement.
 void bootButtonTask(void *) {
-  bool pressed = false;
+  bool pressed = false, longSent = false;
   uint32_t changedAt = 0, pressedAt = 0;
   for (;;) {
     const bool down = digitalRead(PIN_LCD_CS) == LOW;
@@ -138,10 +138,15 @@ void bootButtonTask(void *) {
       bootDown = down;
       if (down) {
         pressedAt = now;
-      } else {
-        const ButtonEvent event = {std::max<uint32_t>(1, now - pressedAt), now};
+        longSent = false;
+      } else if (!longSent) {
+        const ButtonEvent event = {false};
         xQueueSend(bootEvents, &event, 0);
       }
+    } else if (pressed && !longSent && now - pressedAt >= LONG_PRESS_MS) {
+      longSent = true;
+      const ButtonEvent event = {true};
+      xQueueSend(bootEvents, &event, 0);
     }
     vTaskDelay(pdMS_TO_TICKS(4));
   }
@@ -415,7 +420,7 @@ void showPage(int index, int dir, bool quiet = false);
 
 void showNoGifMessage() {
   if (!sdMounted) showMessage("Pas de carte SD", "Insère une carte microSD");
-  else showMessage("Aucun écran", "Appuie 2 secondes sur BOOT pour accéder aux réglages");
+  else showMessage("Aucun écran", "Appuie 1 seconde sur BOOT pour accéder aux réglages");
 }
 
 bool phonePage = false;
@@ -629,7 +634,7 @@ void rotateScreen() {
 }
 
 bool settingsPage = false;
-constexpr int kSettingsRows = 4;
+constexpr int kSettingsRows = 6;
 int settingsRow = 0;
 uint32_t settingsTouchedAt = 0;
 
@@ -638,10 +643,12 @@ void drawSettingsPage() {
   const char *const missing = "capteur introuvable";
   static const char *const slides[kSlideChoices] = {"désactivé", "toutes les 30 s", "toutes les minutes", "toutes les 5 min"};
   const vista::SettingRow rows[] = {
-      {"Rotation automatique", capteur::present ? onOff[autoRotate] : missing},
+      {"Rotation auto", capteur::present ? onOff[autoRotate] : missing},
+      {"Tourner l'écran", "90°"},
       {"Veille", capteur::present ? onOff[sleepEnabled] : missing},
       {"Diaporama", slides[slideIndex]},
       {"Ajouter des écrans", "ouvrir"},
+      {"Quitter", ""},
   };
   vista::drawSettings(ui, rows, kSettingsRows, settingsRow);
   showUi();
@@ -663,19 +670,32 @@ void closeSettings() {
 }
 
 void changeSetting() {
-  if (settingsRow == 0 && capteur::present) {
-    autoRotate = !autoRotate;
-    prefs.putBool("autorot", autoRotate);
-    if (autoRotate) currentPosition = -1;
-  } else if (settingsRow == 1 && capteur::present) {
-    sleepEnabled = !sleepEnabled;
-    prefs.putBool("veille", sleepEnabled);
-  } else if (settingsRow == 2) {
-    slideIndex = (slideIndex + 1) % kSlideChoices;
-    prefs.putUChar("diapo", slideIndex);
-  } else if (settingsRow == 3) {
-    settingsPage = false;
-    openPhone();
+  switch (settingsRow) {
+    case 0:
+      if (!capteur::present) break;
+      autoRotate = !autoRotate;
+      prefs.putBool("autorot", autoRotate);
+      if (autoRotate) currentPosition = -1;
+      break;
+    case 1:
+      rotateScreen();
+      break;
+    case 2:
+      if (!capteur::present) break;
+      sleepEnabled = !sleepEnabled;
+      prefs.putBool("veille", sleepEnabled);
+      break;
+    case 3:
+      slideIndex = (slideIndex + 1) % kSlideChoices;
+      prefs.putUChar("diapo", slideIndex);
+      break;
+    case 4:
+      settingsPage = false;
+      openPhone();
+      break;
+    default:
+      closeSettings();
+      break;
   }
 }
 
@@ -762,8 +782,6 @@ void advanceSlideshow() {
 }
 
 void handleBootButton() {
-  static uint32_t pendingClickAt = 0;
-  static bool pending = false;
   ButtonEvent event;
   while (xQueueReceive(bootEvents, &event, 0) == pdTRUE) {
     noteActivity();
@@ -771,39 +789,15 @@ void handleBootButton() {
       swallowRelease = false;
       continue;
     }
-    if (event.heldMs >= SETTINGS_PRESS_MS) {
-      pending = false;
-      if (settingsPage) closeSettings();
-      else openSettings();
+    if (!settingsPage) {
+      if (event.isLong) openSettings();
+      else step(+1);
       continue;
     }
-    if (settingsPage) {
-      settingsTouchedAt = millis();
-      if (event.heldMs >= LONG_PRESS_MS) changeSetting();
-      else settingsRow = (settingsRow + 1) % kSettingsRows;
-      if (settingsPage) drawSettingsPage();
-      continue;
-    }
-    if (event.heldMs >= LONG_PRESS_MS) {
-      pending = false;
-      step(-1);
-      continue;
-    }
-
-    const uint32_t pressedAt = event.releasedAt - event.heldMs;
-    if (pending && pressedAt - pendingClickAt <= DOUBLE_CLICK_MS) {
-      pending = false;
-      rotateScreen();
-      continue;
-    }
-    if (pending) step(+1);
-    pending = true;
-    pendingClickAt = event.releasedAt;
-  }
-
-  if (pending && !bootDown && millis() - pendingClickAt > DOUBLE_CLICK_MS && uxQueueMessagesWaiting(bootEvents) == 0) {
-    pending = false;
-    step(+1);
+    settingsTouchedAt = millis();
+    if (event.isLong) changeSetting();
+    else settingsRow = (settingsRow + 1) % kSettingsRows;
+    if (settingsPage) drawSettingsPage();
   }
 }
 

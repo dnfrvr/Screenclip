@@ -1,8 +1,6 @@
 #pragma once
 
-#define LONG_PRESS_MS 600
-#define DOUBLE_CLICK_MS 400
-#define SETTINGS_PRESS_MS 2000
+#define LONG_PRESS_MS 800
 #define SETTINGS_TIMEOUT_MS 15000
 
 #define SCREEN_ROTATION 1
