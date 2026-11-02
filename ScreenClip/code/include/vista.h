@@ -154,6 +154,6 @@ inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selec
     drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
     drawText(c, kFontUi, 370, y, on ? kPaper : kMoss, rows[i].value);
   }
-  drawText(c, kFontUi, kLeft, 306, kMoss, "Appui court : ligne suivante   Appui long : valider");
+  drawText(c, kFontUiSmall, kLeft, 306, kMoss, "Appui court : ligne suivante   Appui long : valider");
 }
 }

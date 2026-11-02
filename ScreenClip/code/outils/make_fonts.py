@@ -6,6 +6,7 @@ OUT = ROOT.parent / "include" / "fonts_data.h"
 
 TEXT = "".join(chr(c) for c in range(32, 127)) + "éèêëàâùûçôîïÉÈÀÇ’…•°"
 FONTS = [
+    ("kFontUiSmall", "VT323-Regular.ttf", 24, TEXT, False),
     ("kFontUi", "VT323-Regular.ttf", 32, TEXT, False),
     ("kFontUiBig", "VT323-Regular.ttf", 48, TEXT, False),
 ]
