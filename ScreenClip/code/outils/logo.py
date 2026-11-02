@@ -1,22 +1,10 @@
 from pathlib import Path
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT.parent / "include" / "logo_image.h"
-PNG = ROOT.parent.parent / "logos" / "screenclip-logo.png"
 WIDTH = 640
-BIG_WIDTH = 2400
-
-def vgrad(w, h, stops):
-    img = Image.new("RGB", (1, h))
-    for y in range(h):
-        t = y / max(1, h - 1)
-        for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
-            if p0 <= t <= p1:
-                k = (t - p0) / max(1e-6, p1 - p0)
-                img.putpixel((0, y), tuple(round(a + (b - a) * k) for a, b in zip(c0, c1)))
-                break
-    return img.resize((w, h))
+PINK = (255, 40, 146)
 
 def ink_mask():
     src = Image.open(ROOT / "logo.png").convert("RGBA")
@@ -27,41 +15,13 @@ def ink_mask():
     return ink.crop(ink.point(lambda v: 255 if v > 40 else 0).getbbox())
 
 def render(width):
-    scale = 2
     ink = ink_mask()
-    tw = width * scale
-    ink = ink.resize((tw, round(ink.height * tw / ink.width)), Image.LANCZOS)
-    th = ink.height
-
-    glass = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
-    glass.paste(vgrad(tw, th, [(0, (120, 205, 255)), (0.5, (28, 118, 214)), (1, (8, 50, 130))]), (0, 0), ink)
-    shine = Image.new("L", (tw, th), 0)
-    ImageDraw.Draw(shine).rectangle((0, 0, tw, int(th * 0.47)), fill=80)
-    glass.paste(Image.new("RGB", (tw, th), (255, 255, 255)), (0, 0), ImageChops.multiply(shine, ink))
-
-    rh = int(th * 0.50)
-    mirror = glass.transpose(Image.FLIP_TOP_BOTTOM).crop((0, 0, tw, rh))
-    fade = vgrad(tw, rh, [(0, (60,) * 3), (0.9, (0, 0, 0)), (1, (0, 0, 0))]).convert("L")
-    mirror.putalpha(ImageChops.multiply(mirror.getchannel("A"), fade))
-
-    radius = max(4, tw // 110)
-    pad = radius * 3
-    gap = max(2, th // 20)
-    canvas = Image.new("RGBA", (tw + 2 * pad, th + gap + rh + 2 * pad), (70, 170, 245, 0))
-    halo = Image.new("L", canvas.size, 0)
-    halo.paste(ink, (pad, pad))
-    halo = halo.filter(ImageFilter.GaussianBlur(radius)).point(lambda v: v * 55 // 100)
-    canvas.putalpha(halo)
-    canvas.alpha_composite(glass, (pad, pad))
-    canvas.alpha_composite(mirror, (pad, pad + th + gap))
-    final = canvas.resize((canvas.width // scale, canvas.height // scale), Image.LANCZOS)
-    return final, pad // scale, th // scale
+    ink = ink.resize((width, round(ink.height * width / ink.width)), Image.LANCZOS)
+    logo = Image.new("RGBA", ink.size, PINK + (0,))
+    logo.putalpha(ink)
+    return logo, 0, ink.height
 
 def main():
-    big, _, _ = render(BIG_WIDTH)
-    PNG.parent.mkdir(exist_ok=True)
-    big.save(PNG)
-
     img, pad, text_h = render(WIDTH)
     w, h = img.size
     r, g, b, a = img.split()
@@ -73,10 +33,10 @@ def main():
         "#pragma once",
         "#include <stdint.h>",
         "",
-        f"constexpr int kLogoW = {w};        // image entière (halo et reflet compris)",
+        f"constexpr int kLogoW = {w};        ",
         f"constexpr int kLogoH = {h};",
-        f"constexpr int kLogoPad = {pad};       // marge du halo autour du lettrage",
-        f"constexpr int kLogoTextH = {text_h};    // hauteur du lettrage seul",
+        f"constexpr int kLogoPad = {pad};       ",
+        f"constexpr int kLogoTextH = {text_h};    ",
         "static const uint16_t kLogoColor[] = {",
     ]
     for i in range(0, len(colors), 24):
@@ -86,7 +46,7 @@ def main():
         lines.append("  " + ",".join(str(v) for v in alpha[i:i + 32]) + ",")
     lines.append("};")
     OUT.write_text("\n".join(lines) + "\n")
-    print(f"{OUT.name} : {w}x{h} (lettrage {WIDTH}x{text_h}) ; {PNG} : {big.width}x{big.height}")
+    print(f"{OUT.name} : {w}x{h} (lettrage {WIDTH}x{text_h})")
 
 if __name__ == "__main__":
     main()

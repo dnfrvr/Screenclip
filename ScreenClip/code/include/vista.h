@@ -54,12 +54,7 @@ inline void background(Canvas &c) {
   if (!cached) {
     Canvas target = {cache, c.w, c.h};
     ground(target);
-    for (int y = 0; y < kBarH; ++y) {
-      for (int x = 0; x < c.w; ++x) {
-        const float t = (float)x / c.w;
-        cache[y * c.w + x] = dithered(lerp(44, 196, t), lerp(36, 60, t), lerp(214, 240, t), x, y);
-      }
-    }
+    target.fillRect(0, 0, c.w, kBarH, kPink);
     target.fillRect(0, kBarH, c.w, 2, kInk);
     sparkle(target, c.w - 50, 14, 3, kPaper);
     cached = true;
@@ -107,7 +102,7 @@ inline void roundRect(Canvas &c, int x, int y, int w, int h, float radius, const
 inline void drawBoot(Canvas &c, uint32_t ms) {
   ground(c);
   const uint8_t logoOpacity = ms < 200 ? 0 : (ms < 900 ? (ms - 200) * 255 / 700 : 255);
-  const int logoX = (c.w - kLogoW) / 2, logoY = 58 - kLogoPad;
+  const int logoX = (c.w - kLogoW) / 2, logoY = 72;
   drawImage(c, logoX, logoY, kLogoW, kLogoH, kLogoColor, kLogoAlpha, logoOpacity);
   drawText(c, kFontUi, kLeft, c.h - 22, kInk, BOOT_BYLINE, logoOpacity);
   sparkle(c, c.w - 60, 20, 3, kPink);
