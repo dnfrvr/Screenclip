@@ -51,8 +51,8 @@ Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comm
 
 ## Modifier
 
-Le code est dans `code/` (projet PlatformIO). Le site du téléphone est dans `code/web/` : après un changement, lance `python3 code/outils/make_web.py`. Les réglages sont dans `code/include/reglages.h` : orientation, luminosité, durées, signature. Relance ensuite le fichier d'installation.
+Le code est dans `code/` (projet PlatformIO). Le site du téléphone est dans `code/web/` : après un changement, lance `python3 code/outils/make_web.py`. Les réglages sont dans `code/include/reglages.h` : orientation, luminosité, durées. Relance ensuite le fichier d'installation.
 
 ## Licence
 
-CC BY-NC-SA 4.0, voir `LICENSE`. Composants tiers dans `NOTICE.md`.
+Projet dérivé de [ScreenClip](https://github.com/orouuu/Screenclip), créé par Orou. CC BY-NC-SA 4.0, voir `LICENSE`. Composants tiers dans `NOTICE.md`.

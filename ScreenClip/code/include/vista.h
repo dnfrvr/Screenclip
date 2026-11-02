@@ -10,11 +10,12 @@
 namespace vista {
 constexpr uint32_t kBootMs = 3500;
 
-// DA « système 2001 » : un fond lilas, une barre de titre, du pixel net, un seul rose.
+// DA « système 2001 » : un fond lilas uni, une barre de titre, du pixel net, un seul rose.
 constexpr uint16_t kInk = 0x10AB;
 constexpr uint16_t kPaper = 0xFFFF;
 constexpr uint16_t kPink = 0xF952;
-constexpr uint16_t kPurple = 0x59FA;
+constexpr uint16_t kDeepPink = 0xB08C;
+constexpr uint16_t kGround = 0xEF5F;
 constexpr int kBarH = 54;
 constexpr int kLeft = 28;
 
@@ -23,13 +24,6 @@ inline bool cached = false;
 
 inline int lerp(int a, int b, float t) { return a + (int)((b - a) * t); }
 inline float clamp01(float v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
-
-inline uint16_t dithered(float r, float g, float b, int x, int y) {
-  static const int8_t kBayer[4][4] = {{-8, 0, -6, 2}, {4, -4, 6, -2}, {-5, 3, -7, 1}, {7, -1, 5, -3}};
-  const float d = kBayer[y & 3][x & 3] / 16.0f;
-  const int ri = (int)(r + d * 8 + 0.5f), gi = (int)(g + d * 4 + 0.5f), bi = (int)(b + d * 8 + 0.5f);
-  return rgb565(ri < 0 ? 0 : (ri > 255 ? 255 : ri), gi < 0 ? 0 : (gi > 255 ? 255 : gi), bi < 0 ? 0 : (bi > 255 ? 255 : bi));
-}
 
 inline void sparkle(Canvas &c, int x, int y, int scale, uint16_t color) {
   static const char *const kShape[] = {"....#....", "....#....", "...###...", "..#####..", "#########",
@@ -41,19 +35,12 @@ inline void sparkle(Canvas &c, int x, int y, int scale, uint16_t color) {
   }
 }
 
-inline void ground(Canvas &c) {
-  for (int y = 0; y < c.h; ++y) {
-    const float t = (float)y / c.h;
-    for (int x = 0; x < c.w; ++x) c.pixels[y * c.w + x] = dithered(lerp(236, 255, t), lerp(233, 228, t), lerp(255, 246, t), x, y);
-  }
-}
-
 inline void background(Canvas &c) {
   if (!cache) cache = static_cast<uint16_t *>(heap_caps_malloc(c.w * c.h * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-  if (!cache) { c.fill(0xEF5F); return; }
+  if (!cache) { c.fill(kGround); return; }
   if (!cached) {
     Canvas target = {cache, c.w, c.h};
-    ground(target);
+    target.fill(kGround);
     target.fillRect(0, 0, c.w, kBarH, kPink);
     target.fillRect(0, kBarH, c.w, 2, kInk);
     sparkle(target, c.w - 50, 14, 3, kPaper);
@@ -100,11 +87,10 @@ inline void roundRect(Canvas &c, int x, int y, int w, int h, float radius, const
 }
 
 inline void drawBoot(Canvas &c, uint32_t ms) {
-  ground(c);
+  c.fill(kGround);
   const uint8_t logoOpacity = ms < 200 ? 0 : (ms < 900 ? (ms - 200) * 255 / 700 : 255);
   const int logoX = (c.w - kLogoW) / 2, logoY = 72;
   drawImage(c, logoX, logoY, kLogoW, kLogoH, kLogoColor, kLogoAlpha, logoOpacity);
-  drawText(c, kFontUi, kLeft, c.h - 22, kInk, BOOT_BYLINE, logoOpacity);
   sparkle(c, c.w - 60, 20, 3, kPink);
   if (ms > 600) blocks(c, (c.w - 300) / 2, 262, 300, ms);
 }
@@ -128,7 +114,7 @@ inline void drawHelp(Canvas &c) {
   window(c, "Mode d'emploi");
   for (int i = 0; i < 6; ++i) {
     const int y = 92 + i * 41;
-    drawText(c, kFontUi, kLeft, y, kPurple, kRows[i][0]);
+    drawText(c, kFontUi, kLeft, y, kDeepPink, kRows[i][0]);
     drawText(c, kFontUi, 300, y, kInk, kRows[i][1]);
   }
 }
@@ -154,6 +140,6 @@ inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selec
     drawText(c, kFontUi, kLeft, y, on ? kPaper : kInk, rows[i].label);
     drawText(c, kFontUi, 370, y, on ? kPaper : kInk, rows[i].value);
   }
-  drawText(c, kFontUi, kLeft, 300, kPurple, "Appui : ligne suivante   Appui long : changer");
+  drawText(c, kFontUi, kLeft, 300, kDeepPink, "Appui : ligne suivante   Appui long : changer");
 }
 }

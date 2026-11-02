@@ -35,7 +35,6 @@
 #define USB_DRIVE 1
 
 #define BOOT_SCREEN 1
-#define BOOT_BYLINE "par Orou"
 
 #define CPU_MHZ_STATIC 160
 
