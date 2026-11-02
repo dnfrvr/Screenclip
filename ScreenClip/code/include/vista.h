@@ -136,16 +136,39 @@ inline void drawHelp(Canvas &c) {
       {"Un appui", "image suivante"},
       {"Appui long", "image précédente"},
       {"Deux appuis", "tourne l'écran"},
+      {"Appui de 2 secondes", "ouvre les réglages"},
       {"Branchée à un ordinateur", "devient une clé USB pour tes GIF"},
   };
   background(c);
   const int left = 56;
   drawText(c, kFontVistaTitle, left, 80, kBlue, "Mode d'emploi");
   c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 5; ++i) {
     const int y = 142 + i * 37;
     drawText(c, kFontVistaText, left, y, kBlue, kRows[i][0]);
     drawText(c, kFontVistaText, left + 320, y, kInk, kRows[i][1]);
   }
+}
+
+struct SettingRow {
+  const char *label;
+  const char *value;
+};
+
+inline void drawSettings(Canvas &c, const SettingRow *rows, int count, int selected) {
+  constexpr uint16_t kBlue = 0x2B97;
+  constexpr uint16_t kInk = 0x2965;
+  static const uint8_t kPick[3] = {214, 234, 250};
+  background(c);
+  const int left = 56;
+  drawText(c, kFontVistaTitle, left, 80, kBlue, "Réglages");
+  c.fillRect(left, 100, c.w - 2 * left, 1, rgb565(150, 196, 232));
+  for (int i = 0; i < count; ++i) {
+    const int y = 148 + i * 46;
+    if (i == selected) roundRect(c, left - 16, y - 31, c.w - 2 * left + 32, 44, 10, kPick, kPick);
+    drawText(c, kFontVistaText, left, y, kBlue, rows[i].label);
+    drawText(c, kFontVistaText, left + 320, y, kInk, rows[i].value);
+  }
+  drawText(c, kFontVistaText, left, 300, kInk, "Appui : ligne suivante    Long : changer    2 s : quitter");
 }
 }

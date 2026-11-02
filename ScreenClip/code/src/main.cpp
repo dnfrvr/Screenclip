@@ -11,7 +11,9 @@
 #include <vector>
 
 #include "reglages.h"
+#include "capteur.h"
 #include "ecran.h"
+#include "orientation.h"
 
 #include "batterie.h"
 #include "texte.h"
@@ -69,6 +71,28 @@ void compositeOverlay(uint16_t *panel) {
   if ((int32_t)(overlayUntil - millis()) <= 0) return;
   battery::composite(panel, rotation);
   overlayShown = true;
+}
+
+bool autoRotate = AUTO_ROTATE_DEFAULT;
+bool sleepEnabled = SLEEP_DEFAULT;
+constexpr int kSlideSeconds[] = {0, 30, 60, 300};
+constexpr int kSlideChoices = sizeof(kSlideSeconds) / sizeof(kSlideSeconds[0]);
+int slideIndex = SLIDESHOW_DEFAULT_INDEX;
+
+uint32_t lastActivityAt = 0;
+uint32_t pageShownAt = 0;
+bool sleeping = false;
+bool swallowRelease = false;
+volatile bool motionSeen = false;
+
+orientation::Tracker tracker(ROTATE_MIN_TILT_G, ROTATE_DOMINANCE, ROTATE_HOLD_MS);
+orientation::Motion motion(MOTION_THRESHOLD_G);
+uint8_t rotationForPosition[4] = {0, 1, 2, 3};
+int currentPosition = -1;
+
+void setBacklight(uint8_t level) {
+  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, level ? 255 - level : 256);
+  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
 }
 
 void initBacklight(uint8_t level) {
@@ -386,8 +410,9 @@ void showNoGifMessage() {
   else showMessage("Aucun GIF", "Copie des .gif sur la carte SD");
 }
 
-void showPage(int index, int dir) {
-  showBatteryOverlay(BATTERY_OVERLAY_MS);
+void showPage(int index, int dir, bool quiet = false) {
+  if (!quiet) showBatteryOverlay(BATTERY_OVERLAY_MS);
+  pageShownAt = millis();
   bool reloaded = false;
 
   for (int tries = 0; tries <= pageCount() + 1; ++tries) {
@@ -415,7 +440,7 @@ void showPage(int index, int dir) {
     if (openGif(currentIndex - kGifBase)) {
       messagePage = false;
       nextFrameAt = millis();
-      prefs.putString("last", gifFiles[currentIndex - kGifBase]);
+      if (!quiet) prefs.putString("last", gifFiles[currentIndex - kGifBase]);
       return;
     }
 
@@ -499,10 +524,129 @@ void bootScreen() {
   }
 }
 
+void applyRotation(int value) {
+  rotation = value & 3;
+  if (srcPixels) {
+    buildMaps();
+    renderFrame();
+  }
+}
+
 void rotateScreen() {
-  rotation = (rotation + 1) & 3;
+  applyRotation(rotation + 1);
   prefs.putUChar("rot", rotation);
-  if (srcPixels) buildMaps();
+  // En rotation auto, le geste corrige la position actuelle et la retient.
+  if (autoRotate && currentPosition >= 0) {
+    rotationForPosition[currentPosition] = rotation;
+    prefs.putBytes("rotmap", rotationForPosition, sizeof(rotationForPosition));
+  }
+}
+
+bool settingsPage = false;
+int settingsRow = 0;
+uint32_t settingsTouchedAt = 0;
+
+void drawSettingsPage() {
+  const char *const onOff[2] = {"désactivée", "activée"};
+  const char *const missing = "capteur introuvable";
+  static const char *const slides[kSlideChoices] = {"désactivé", "toutes les 30 s", "toutes les minutes", "toutes les 5 min"};
+  const vista::SettingRow rows[] = {
+      {"Rotation automatique", capteur::present ? onOff[autoRotate] : missing},
+      {"Veille", capteur::present ? onOff[sleepEnabled] : missing},
+      {"Diaporama", slides[slideIndex]},
+  };
+  vista::drawSettings(ui, rows, 3, settingsRow);
+  showUi();
+}
+
+void openSettings() {
+  closeGif();
+  setFullSpeed(false);
+  settingsPage = true;
+  settingsRow = 0;
+  settingsTouchedAt = millis();
+  drawSettingsPage();
+}
+
+void closeSettings() {
+  settingsPage = false;
+  showPage(currentIndex, 1, true);
+}
+
+void changeSetting() {
+  if (settingsRow == 0 && capteur::present) {
+    autoRotate = !autoRotate;
+    prefs.putBool("autorot", autoRotate);
+    if (autoRotate) currentPosition = -1;
+  } else if (settingsRow == 1 && capteur::present) {
+    sleepEnabled = !sleepEnabled;
+    prefs.putBool("veille", sleepEnabled);
+  } else if (settingsRow == 2) {
+    slideIndex = (slideIndex + 1) % kSlideChoices;
+    prefs.putUChar("diapo", slideIndex);
+  }
+}
+
+void noteActivity() { lastActivityAt = millis(); }
+
+void enterSleep() {
+  sleeping = true;
+  motionSeen = false;
+  setBacklight(0);
+  setFullSpeed(false);
+}
+
+void wakeUp() {
+  sleeping = false;
+  setBacklight(BACKLIGHT_LEVEL);
+  setFullSpeed(gifOpen);
+  noteActivity();
+  pageShownAt = nextFrameAt = millis();
+}
+
+void pollSensors() {
+  static uint32_t lastPollAt = 0;
+  if (!capteur::present || millis() - lastPollAt < SENSOR_PERIOD_MS) return;
+  lastPollAt = millis();
+  float ax, ay, az;
+  if (!capteur::read(ax, ay, az)) return;
+  if (motion.update(ax, ay, az)) {
+    motionSeen = true;
+    noteActivity();
+  }
+  if (!autoRotate || sleeping) return;
+  const int position = tracker.update(ax, ay, millis());
+  if (position < 0 || position == currentPosition) return;
+  currentPosition = position;
+  if (rotationForPosition[position] != rotation) applyRotation(rotationForPosition[position]);
+}
+
+// Le premier appui en veille ne fait que réveiller la barrette.
+bool handleSleep() {
+  if (sleeping) {
+    if (!motionSeen && !bootDown && uxQueueMessagesWaiting(bootEvents) == 0) {
+      delay(20);
+      return true;
+    }
+    swallowRelease = bootDown;
+    xQueueReset(bootEvents);
+    wakeUp();
+    return false;
+  }
+  if (sleepEnabled && capteur::present && !settingsPage && !bootDown &&
+      millis() - lastActivityAt >= SLEEP_AFTER_S * 1000UL) {
+    enterSleep();
+    return true;
+  }
+  return false;
+}
+
+void advanceSlideshow() {
+  const int seconds = kSlideSeconds[slideIndex];
+  if (!seconds || !gifOpen || gifFiles.size() < 2) return;
+  if (millis() - pageShownAt < seconds * 1000UL) return;
+  const int next = currentIndex + 1 >= pageCount() ? kGifBase : currentIndex + 1;
+  showPage(next, 1, true);
 }
 
 void handleBootButton() {
@@ -510,6 +654,24 @@ void handleBootButton() {
   static bool pending = false;
   ButtonEvent event;
   while (xQueueReceive(bootEvents, &event, 0) == pdTRUE) {
+    noteActivity();
+    if (swallowRelease) {
+      swallowRelease = false;
+      continue;
+    }
+    if (event.heldMs >= SETTINGS_PRESS_MS) {
+      pending = false;
+      if (settingsPage) closeSettings();
+      else openSettings();
+      continue;
+    }
+    if (settingsPage) {
+      settingsTouchedAt = millis();
+      if (event.heldMs >= LONG_PRESS_MS) changeSetting();
+      else settingsRow = (settingsRow + 1) % 3;
+      drawSettingsPage();
+      continue;
+    }
     if (event.heldMs >= LONG_PRESS_MS) {
       pending = false;
       step(-1);
@@ -537,6 +699,8 @@ bool transferMode = false;
 uint32_t transferStartMs = 0;
 
 void enterTransfer() {
+  if (sleeping) wakeUp();
+  settingsPage = false;
   closeGif();
   setFullSpeed(true);
   overlayUntil = 0;
@@ -548,6 +712,7 @@ void enterTransfer() {
 void exitTransfer() {
   usbdrive::expose(false);
   transferMode = false;
+  noteActivity();
   transferDone = true;
   delay(200);
   loadLibrary();
@@ -593,6 +758,15 @@ void setup() {
   prefs.begin("gifplayer", false);
   rotation = prefs.getUChar("rot", SCREEN_ROTATION) & 3;
 
+  autoRotate = prefs.getBool("autorot", AUTO_ROTATE_DEFAULT);
+  sleepEnabled = prefs.getBool("veille", SLEEP_DEFAULT);
+  slideIndex = prefs.getUChar("diapo", SLIDESHOW_DEFAULT_INDEX) % kSlideChoices;
+  if (prefs.getBytesLength("rotmap") == sizeof(rotationForPosition)) {
+    prefs.getBytes("rotmap", rotationForPosition, sizeof(rotationForPosition));
+  }
+  capteur::begin();
+  noteActivity();
+
   for (int i = 0; i < 4; ++i) battery::update(true);
   loadLibrary();
 #if BOOT_SCREEN
@@ -615,7 +789,16 @@ void loop() {
     if (srcPixels) renderFrame();
   }
 
+  pollSensors();
+  if (handleSleep()) return;
+
   handleBootButton();
+
+  if (settingsPage) {
+    if (millis() - settingsTouchedAt > SETTINGS_TIMEOUT_MS) closeSettings();
+    delay(20);
+    return;
+  }
 
   if (helpPage) {
     if (helpLeaveAt && (int32_t)(millis() - helpLeaveAt) >= 0) {
@@ -636,6 +819,8 @@ void loop() {
     delay(20);
     return;
   }
+
+  advanceSlideshow();
 
   if (gifOpen && (int32_t)(millis() - nextFrameAt) >= 0) {
     int delayMs = 0;

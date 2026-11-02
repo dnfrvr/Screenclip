@@ -21,6 +21,15 @@ Tout se fait avec le bouton BOOT :
 | Un appui | image suivante |
 | Appui long | image précédente |
 | Deux appuis | tourne l'image de 90° |
+| Appui de 2 secondes | ouvre ou ferme les réglages |
+
+Sur la page Réglages, un appui passe à la ligne suivante et un appui long change la valeur. Elle se ferme seule après 15 secondes.
+
+| Réglage | Effet |
+|---|---|
+| Rotation automatique | l'image suit le sens de la barrette. Si elle est de travers dans une position, deux appuis la corrigent et la barrette retient cette position. |
+| Veille | après 2 minutes sans mouvement, l'écran s'éteint et le GIF se met en pause. Un mouvement ou un appui le rallume. |
+| Diaporama | change de GIF toutes les 30 s, 1 min ou 5 min. |
 
 Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comme une clé USB. Copie tes `.gif` dans le dossier `gifs`, puis éjecte le disque.
 

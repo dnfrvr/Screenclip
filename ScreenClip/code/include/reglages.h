@@ -2,12 +2,26 @@
 
 #define LONG_PRESS_MS 600
 #define DOUBLE_CLICK_MS 400
+#define SETTINGS_PRESS_MS 2000
+#define SETTINGS_TIMEOUT_MS 15000
 
 #define SCREEN_ROTATION 1
 
 #define GIF_FOLDER "/gifs"
 
 #define GIF_MAX_BYTES (6 * 1024 * 1024)
+
+// Valeurs de départ : ensuite, tout se change sur la page Réglages.
+#define AUTO_ROTATE_DEFAULT 1
+#define SLEEP_DEFAULT 1
+#define SLIDESHOW_DEFAULT_INDEX 0
+
+#define SLEEP_AFTER_S 120
+#define SENSOR_PERIOD_MS 100
+#define ROTATE_HOLD_MS 600
+#define ROTATE_MIN_TILT_G 0.5f
+#define ROTATE_DOMINANCE 1.4f
+#define MOTION_THRESHOLD_G 0.08f
 
 #define BATTERY_OVERLAY 1
 #define BATTERY_OVERLAY_MS 2500
@@ -35,6 +49,9 @@
 #define PIN_BACKLIGHT 6
 
 #define PIN_BATTERY_ADC 4
+
+#define PIN_I2C_A 15
+#define PIN_I2C_B 7
 
 #define PIN_LCD_CS 0
 #define PIN_LCD_SCK 2
