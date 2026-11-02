@@ -33,13 +33,13 @@ Sur la page Réglages, un appui passe à la ligne suivante et un appui long chan
 
 ### Depuis un téléphone
 
-Ouvre les réglages (appui de 2 secondes), choisis « Ajouter des écrans », puis suis ce qui s'affiche. La même page se trouve aussi après le dernier écran.
+Ouvre les réglages (appui de 2 secondes), choisis « Ajouter des écrans », puis suis ce qui s'affiche.
 
 1. Scanne le premier QR code avec l'appareil photo et accepte le Wi-Fi proposé.
 2. Scanne le second QR code : ton navigateur ouvre la page « Mes écrans ».
 3. Ajoute une photo, une vidéo ou un texte, ou supprime un écran.
 
-Rien à installer et pas besoin d'internet. Le Wi-Fi ne reste allumé que sur cette page, et elle se ferme après 10 minutes sans téléphone connecté.
+Rien à installer et pas besoin d'internet. Le Wi-Fi ne reste allumé que sur cette page. Un appui la ferme, et elle se ferme seule après 10 minutes sans téléphone connecté.
 
 ### Depuis un ordinateur
 

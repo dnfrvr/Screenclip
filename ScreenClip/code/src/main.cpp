@@ -396,8 +396,7 @@ uint32_t lastRetryAt = 0;
 void loadLibrary();
 
 int gifSlots() { return gifFiles.empty() ? 1 : (int)gifFiles.size(); }
-int pageCount() { return kGifBase + gifSlots() + 1; }
-bool isPhoneIndex(int index) { return index == kGifBase + gifSlots(); }
+int pageCount() { return kGifBase + gifSlots(); }
 bool isHelpIndex(int index) { return HELP_ENABLED && index == 0; }
 
 void setFullSpeed(bool full) {
@@ -413,7 +412,7 @@ void showPage(int index, int dir, bool quiet = false);
 
 void showNoGifMessage() {
   if (!sdMounted) showMessage("Pas de carte SD", "Insère une carte microSD");
-  else showMessage("Aucun écran", "Appuie sur le bouton pour en ajouter");
+  else showMessage("Aucun écran", "Appui de 2 s, puis Ajouter des écrans");
 }
 
 bool phonePage = false;
@@ -437,7 +436,6 @@ void loadPhoneIdentity() {
 
 void onPhoneLibraryChanged() {
   loadGifList();
-  currentIndex = kGifBase + gifSlots();
 }
 
 void drawPhonePage(int step) {
@@ -468,6 +466,13 @@ void enterPhone() {
   }
 }
 
+void openPhone() {
+  closeGif();
+  setFullSpeed(true);
+  messagePage = helpPage = false;
+  enterPhone();
+}
+
 void leavePhone() {
   if (!phonePage) return;
   phonePage = false;
@@ -494,13 +499,6 @@ void showPage(int index, int dir, bool quiet) {
   for (int tries = 0; tries <= pageCount() + 1; ++tries) {
     const int count = pageCount();
     currentIndex = ((index % count) + count) % count;
-    if (isPhoneIndex(currentIndex)) {
-      closeGif();
-      setFullSpeed(true);
-      messagePage = helpPage = false;
-      enterPhone();
-      return;
-    }
     leavePhone();
     if (isHelpIndex(currentIndex)) {
       closeGif();
@@ -546,7 +544,7 @@ void showPage(int index, int dir, bool quiet) {
 
 void step(int dir) {
   helpLeaveAt = 0;
-  if (phonePage && dir > 0) showPage(kGifBase, 1);
+  if (phonePage) showPage(kGifBase, 1);
   else showPage(currentIndex + dir, dir);
 }
 
@@ -674,7 +672,7 @@ void changeSetting() {
     prefs.putUChar("diapo", slideIndex);
   } else if (settingsRow == 3) {
     settingsPage = false;
-    showPage(kGifBase + gifSlots(), 1, true);
+    openPhone();
   }
 }
 
