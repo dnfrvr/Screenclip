@@ -125,6 +125,13 @@ inline void drawPhone(Canvas &c, const char *title, const char *const *lines, in
   for (int i = 0; i < count; ++i) drawText(c, kFontUi, 292, 112 + i * 44, i < primary ? kInk : kMoss, lines[i]);
 }
 
+constexpr int kSaverW = 36, kSaverH = 36;
+
+inline void drawSaver(Canvas &c, int x, int y) {
+  c.fill(0x0000);
+  sparkle(c, x, y, 4, kPink);
+}
+
 struct SettingRow {
   const char *label;
   const char *value;

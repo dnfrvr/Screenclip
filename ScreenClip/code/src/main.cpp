@@ -83,6 +83,9 @@ int slideIndex = SLIDESHOW_DEFAULT_INDEX;
 uint32_t lastActivityAt = 0;
 uint32_t pageShownAt = 0;
 bool sleeping = false;
+bool saverOn = false;
+uint32_t sleptAt = 0;
+uint32_t saverMovedAt = 0;
 bool swallowRelease = false;
 volatile bool motionSeen = false;
 
@@ -676,19 +679,40 @@ void changeSetting() {
   }
 }
 
-void enterSleep() {
-  sleeping = true;
-  motionSeen = false;
-  setBacklight(0);
-  setFullSpeed(false);
+void drawSaver() {
+  vista::drawSaver(ui, esp_random() % (kUiW - vista::kSaverW), esp_random() % (kUiH - vista::kSaverH));
+  showUi();
+  saverMovedAt = millis();
 }
 
-void wakeUp() {
+void enterSleep() {
+  sleeping = true;
+  saverOn = true;
+  sleptAt = millis();
+  motionSeen = false;
+  closeGif();
+  setFullSpeed(false);
+  setBacklight(SAVER_BACKLIGHT);
+  drawSaver();
+}
+
+void wakeUp(bool restore = true) {
   sleeping = false;
+  saverOn = false;
   setBacklight(BACKLIGHT_LEVEL);
-  setFullSpeed(gifOpen);
   noteActivity();
-  pageShownAt = nextFrameAt = millis();
+  if (restore) showPage(currentIndex, 1, true);
+}
+
+// Le petit écran de veille, peu lumineux, puis écran éteint.
+void updateSaver() {
+  if (!saverOn) return;
+  if (millis() - sleptAt >= SAVER_S * 1000UL) {
+    saverOn = false;
+    setBacklight(0);
+  } else if (millis() - saverMovedAt >= SAVER_STEP_MS) {
+    drawSaver();
+  }
 }
 
 void pollSensors() {
@@ -712,6 +736,7 @@ void pollSensors() {
 bool handleSleep() {
   if (sleeping) {
     if (!motionSeen && !bootDown && uxQueueMessagesWaiting(bootEvents) == 0) {
+      updateSaver();
       delay(20);
       return true;
     }
@@ -786,7 +811,7 @@ bool transferMode = false;
 uint32_t transferStartMs = 0;
 
 void enterTransfer() {
-  if (sleeping) wakeUp();
+  if (sleeping) wakeUp(false);
   settingsPage = false;
   leavePhone();
   closeGif();

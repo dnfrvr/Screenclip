@@ -28,7 +28,7 @@ Sur la page Réglages, un appui passe à la ligne suivante et un appui long chan
 | Réglage | Effet |
 |---|---|
 | Rotation automatique | l'image suit le sens de la barrette. Si elle est de travers dans une position, deux appuis la corrigent et la barrette retient cette position. |
-| Veille | après 2 minutes sans mouvement, l'écran s'éteint et le GIF se met en pause. Un mouvement ou un appui le rallume. |
+| Veille | après 2 minutes sans mouvement, une petite étoile se déplace sur fond noir avec un rétroéclairage faible. L'écran s'éteint 5 minutes plus tard. Un mouvement ou un appui le rallume. |
 | Diaporama | change de GIF toutes les 30 s, 1 min ou 5 min. |
 
 ### Depuis un téléphone
