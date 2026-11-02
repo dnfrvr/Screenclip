@@ -78,10 +78,10 @@ inline void build() {
   pillWidth = kPad + kIconW + 4 + kPad;
   const int ix = kPad, iy = (kH - kIconH) / 2;
 
-  static const uint8_t white[3] = {255, 255, 255}, ink[3] = {22, 20, 88};
-  static const uint8_t pinkTop[3] = {255, 40, 146}, pinkBottom[3] = {255, 40, 146};
-  static const uint8_t redTop[3] = {255, 90, 60}, redBottom[3] = {255, 90, 60};
-  static const uint8_t boltTop[3] = {255, 40, 146}, boltBottom[3] = {255, 40, 146};
+  static const uint8_t white[3] = {255, 255, 255}, ink[3] = {11, 74, 58};
+  static const uint8_t greenTop[3] = {25, 195, 125}, greenBottom[3] = {25, 195, 125};
+  static const uint8_t redTop[3] = {255, 40, 146}, redBottom[3] = {255, 40, 146};
+  static const uint8_t boltTop[3] = {25, 195, 125}, boltBottom[3] = {25, 195, 125};
 
   Canvas alpha = {alphaPixels, kW, kH};
   alpha.fill(0);
@@ -109,8 +109,8 @@ inline void build() {
   } else {
     const bool low = bars <= 1;
     for (int k = 0; k < bars; ++k) {
-      vista::roundRect(color, ix + 4 + k * (kBarW + kBarGap), iy + 4, kBarW, kIconH - 8, 1.5f, low ? redTop : pinkTop,
-                       low ? redBottom : pinkBottom);
+      vista::roundRect(color, ix + 4 + k * (kBarW + kBarGap), iy + 4, kBarW, kIconH - 8, 1.5f, low ? redTop : greenTop,
+                       low ? redBottom : greenBottom);
     }
   }
 }

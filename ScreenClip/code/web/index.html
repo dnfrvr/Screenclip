@@ -2,10 +2,10 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Une page d'application au pouce : pile de barrettes, action principale fixée en bas. */
-:root{--bg:#f3f0f7;--surface:#fff;--ink:#231a33;--muted:#6c6280;--line:#ddd6e8;--accent:#c81e63;--on-accent:#fff;--soft:#fbe4ee;--danger:#b3261e;
+:root{--bg:#fff0f6;--surface:#fff;--ink:#0b4a3a;--muted:#3f6f60;--line:#f6d3e2;--accent:#d81b78;--on-accent:#fff;--pick:#0b4a3a;--on-pick:#fff;--soft:#d9f7e8;--danger:#b3126a;
 --font:ui-rounded,"SF Pro Rounded",-apple-system,"Roboto","Segoe UI",sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17121f;--surface:#231b30;--ink:#f4eff9;--muted:#ab9fbd;--line:#3b3049;--accent:#ff5c9a;--on-accent:#2b0413;--soft:#43182e;--danger:#ff8a80;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#17121f;--surface:#231b30;--ink:#f4eff9;--muted:#ab9fbd;--line:#3b3049;--accent:#ff5c9a;--on-accent:#2b0413;--soft:#43182e;--danger:#ff8a80;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d211b;--surface:#16332a;--ink:#fdeff6;--muted:#a8c9bc;--line:#2a4a3f;--accent:#ff5fa8;--on-accent:#3a0620;--pick:#19c37d;--on-pick:#06281d;--soft:#16332a;--danger:#ff8ac0;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font:400 17px/1.4 var(--font);margin:0;-webkit-tap-highlight-color:transparent}
@@ -36,9 +36,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,label:focus-with
 textarea{width:100%;min-height:84px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{min-height:44px;padding:0 14px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.chip[aria-pressed="true"]{background:var(--pick);border-color:var(--pick);color:var(--on-pick);font-weight:700}
 .swatch{width:44px;height:44px;border-radius:50%;border:1px solid var(--line)}
-.swatch[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+.swatch[aria-pressed="true"]{outline:3px solid var(--pick);outline-offset:2px}
 input[type=range]{width:100%;height:44px;accent-color:var(--accent)}
 .overlay{position:fixed;inset:0;background:rgba(10,5,18,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:5}
 .box{background:var(--surface);border-radius:20px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px}
@@ -170,10 +170,10 @@ async function send(blob){
 }
 
 /* Texte */
-const COLORS=['#ffffff','#17121f','#ff4f9a','#ffd23f','#3dd6a3','#3b82f6','#8b5cf6','#ff6b35'];
+const COLORS=['#ffffff','#0b4a3a','#ff2892','#fff0f6','#19c37d','#ffd23f','#3b82f6','#8b5cf6'];
 const FONTS=[['Simple','800 %px -apple-system,Roboto,sans-serif'],['Élégante','italic 700 %px Georgia,"Noto Serif",serif'],['Machine','700 %px ui-monospace,Menlo,"Roboto Mono",monospace']];
 const ANIMS=[['fixe','Fixe'],['defile','Défilement'],['clignote','Clignotement'],['machine','Machine à écrire']];
-const T={text:'Coucou !',anim:'fixe',font:0,fg:'#ffffff',bg:'#ff4f9a'};
+const T={text:'Coucou !',anim:'fixe',font:0,fg:'#ffffff',bg:'#ff2892'};
 const fontOf=(s,px)=>FONTS[s.font][1].replace('%',px);
 function fit(ctx,s,lines){let px=120;for(;px>14;px-=2){ctx.font=fontOf(s,px);
  if(lines.length*px*1.15<=H-20&&Math.max(...lines.map(l=>ctx.measureText(l).width))<=W-28)break}return px}
@@ -256,7 +256,7 @@ $('action').onclick=async()=>{
 /* Démarrage */
 (async()=>{
  go('vHome');$('demoNote').hidden=!DEMO;
- if(DEMO){for(const s of [{text:'Bonne fête !',anim:'defile',font:1,fg:'#ffd23f',bg:'#17121f'},{text:'Coucou\ntoi',anim:'clignote',font:0,fg:'#ffffff',bg:'#ff4f9a'}]){const b=await textGif(s);demoItems.push({chemin:'x'+demoItems.length,url:URL.createObjectURL(b)})}refresh()}
+ if(DEMO){for(const s of [{text:'Bonne fête !',anim:'defile',font:1,fg:'#19c37d',bg:'#0b4a3a'},{text:'Coucou\ntoi',anim:'clignote',font:0,fg:'#ffffff',bg:'#ff2892'}]){const b=await textGif(s);demoItems.push({chemin:'x'+demoItems.length,url:URL.createObjectURL(b)})}refresh()}
 })();
 })();
 </script>

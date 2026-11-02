@@ -10,12 +10,13 @@
 namespace vista {
 constexpr uint32_t kBootMs = 3500;
 
-// DA « système 2001 » : un fond lilas uni, une barre de titre, du pixel net, un seul rose.
-constexpr uint16_t kInk = 0x10AB;
+// DA « système 2001 » : un fond rose pâle uni, une barre rose, du pixel net, du vert pour le reste.
+constexpr uint16_t kInk = 0x0A47;
 constexpr uint16_t kPaper = 0xFFFF;
 constexpr uint16_t kPink = 0xF952;
 constexpr uint16_t kDeepPink = 0xB08C;
-constexpr uint16_t kGround = 0xEF5F;
+constexpr uint16_t kGround = 0xFF7E;
+constexpr uint16_t kGreen = 0x1E0F;
 constexpr int kBarH = 54;
 constexpr int kLeft = 28;
 
@@ -42,7 +43,6 @@ inline void background(Canvas &c) {
     Canvas target = {cache, c.w, c.h};
     target.fill(kGround);
     target.fillRect(0, 0, c.w, kBarH, kPink);
-    target.fillRect(0, kBarH, c.w, 2, kInk);
     sparkle(target, c.w - 50, 14, 3, kPaper);
     cached = true;
   }
@@ -62,7 +62,7 @@ inline void blocks(Canvas &c, int x, int y, int w, uint32_t ms) {
   const int slots = (w - 8) / (kBlock + kGap);
   const int head = (ms / 120) % (slots + kLit);
   for (int i = head - kLit; i < head; ++i) {
-    if (i >= 0 && i < slots) c.fillRect(x + 5 + i * (kBlock + kGap), y + 5, kBlock, kH - 10, kPink);
+    if (i >= 0 && i < slots) c.fillRect(x + 5 + i * (kBlock + kGap), y + 5, kBlock, kH - 10, kGreen);
   }
 }
 
@@ -91,7 +91,7 @@ inline void drawBoot(Canvas &c, uint32_t ms) {
   const uint8_t logoOpacity = ms < 200 ? 0 : (ms < 900 ? (ms - 200) * 255 / 700 : 255);
   const int logoX = (c.w - kLogoW) / 2, logoY = 72;
   drawImage(c, logoX, logoY, kLogoW, kLogoH, kLogoColor, kLogoAlpha, logoOpacity);
-  sparkle(c, c.w - 60, 20, 3, kPink);
+  sparkle(c, c.w - 60, 20, 3, kGreen);
   if (ms > 600) blocks(c, (c.w - 300) / 2, 262, 300, ms);
 }
 
