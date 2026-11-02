@@ -234,7 +234,7 @@ chips('mDur',DURS,()=>M.dur,v=>{M.dur=+v});
  c.onpointerdown=e=>{p=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};
  c.onpointermove=e=>{if(!p)return;const r=c.getBoundingClientRect(),k=Math.max(W/M.sw,H/M.sh)*M.zoom,sx=W/r.width;
   const free=(a,b)=>Math.max(1,a-b);
-  M.x=Math.min(1,Math.max(0,M.x+(e.clientX-p[0])*sx/free(M.sw*k,W)));M.y=Math.min(1,Math.max(0,M.y+(e.clientY-p[1])*sx/free(M.sh*k,H)));
+  M.x=Math.min(1,Math.max(0,M.x-(e.clientX-p[0])*sx/free(M.sw*k,W)));M.y=Math.min(1,Math.max(0,M.y-(e.clientY-p[1])*sx/free(M.sh*k,H)));
   p=[e.clientX,e.clientY];M.gifFile=null;if(!M.video)drawCrop()};
  c.onpointerup=c.onpointercancel=()=>p=null}
 async function mediaGif(){
