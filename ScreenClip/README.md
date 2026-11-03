@@ -49,7 +49,7 @@ Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comm
 
 ## Modifier
 
-Le code est dans `code/` (projet PlatformIO). 
+Le code est dans `code/` (projet PlatformIO). Les réglages sont dans `code/include/reglages.h` : relance ensuite le fichier d'installation.
 
 | Dossier ou fichier | Contenu |
 |---|---|
@@ -60,7 +60,6 @@ Le code est dans `code/` (projet PlatformIO).
 | `code/tests/` | Tests de la logique de rotation, à lancer sur ordinateur (commande en tête du fichier) |
 
 `fonts_data.h`, `logo_image.h` et `page_web.h` sont générés : ne les modifie pas à la main.
- Les réglages sont dans `code/include/reglages.h`. Relance ensuite le fichier d'installation.
 
 ## Licence
 
