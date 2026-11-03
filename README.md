@@ -4,9 +4,9 @@ Une barrette à écran : elle affiche en boucle les GIF d'une carte microSD sur 
 
 ## Installer
 
-1. Télécharge ce dossier (bouton vert « Code », puis « Download ZIP ») et extrais tout le zip.
+1. Télécharge ce dépôt (bouton vert « Code », puis « Download ZIP ») et extrais tout le zip.
 2. Branche la barrette en USB.
-3. Double-clique sur `_MAC/flash_mac.command` ou `_WINDOWS/flash_windows.bat`.
+3. Double-clique sur `ScreenClip/_MAC/flash_mac.command` ou `ScreenClip/_WINDOWS/flash_windows.bat`.
 
 La première fois, il faut internet et quelques minutes : les outils s'installent tout seuls. Si la barrette n'est pas en mode programmation, la fenêtre explique le geste à faire avec les boutons BOOT et RST.
 
@@ -49,18 +49,18 @@ Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comm
 
 ## Modifier
 
-Le code est dans `code/` (projet PlatformIO). Les réglages sont dans `code/include/reglages.h` : relance ensuite le fichier d'installation.
+Le code est dans `ScreenClip/code/` (projet PlatformIO). Les réglages sont dans `ScreenClip/code/include/reglages.h` : relance ensuite le fichier d'installation.
 
 | Dossier ou fichier | Contenu |
 |---|---|
-| `code/src/main.cpp` | Carrousel, réglages, veille et boucle principale |
-| `code/include/` | Écran, rendu, menus, bouton, capteur, Wi-Fi et clé USB |
-| `code/web/` | Site du téléphone. Après un changement, lance `python3 code/outils/make_web.py`. |
-| `code/outils/` | Génération des polices, du logo et du site, script de flash |
-| `code/tests/` | Tests de la logique de rotation, à lancer sur ordinateur (commande en tête du fichier) |
+| `ScreenClip/code/src/main.cpp` | Carrousel, réglages, veille et boucle principale |
+| `ScreenClip/code/include/` | Écran, rendu, menus, bouton, capteur, Wi-Fi et clé USB |
+| `ScreenClip/code/web/` | Site du téléphone. Après un changement, lance `python3 ScreenClip/code/outils/make_web.py`. |
+| `ScreenClip/code/outils/` | Génération des polices, du logo et du site, script de flash |
+| `ScreenClip/code/tests/` | Tests de la logique de rotation, à lancer sur ordinateur (commande en tête du fichier) |
 
 `fonts_data.h`, `logo_image.h` et `page_web.h` sont générés : ne les modifie pas à la main.
 
 ## Licence
 
-Projet dérivé de [ScreenClip](https://github.com/orouuu/Screenclip), créé par Orou. CC BY-NC-SA 4.0, voir `LICENSE`. Composants tiers dans `NOTICE.md`.
+Projet dérivé de [ScreenClip](https://github.com/orouuu/Screenclip), créé par Orou. CC BY-NC-SA 4.0, voir `ScreenClip/LICENSE`. Composants tiers dans `ScreenClip/NOTICE.md`.
