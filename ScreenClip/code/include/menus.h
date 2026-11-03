@@ -7,7 +7,7 @@
 #include "logo_image.h"
 #include "texte.h"
 
-namespace vista {
+namespace menus {
 constexpr uint32_t kBootMs = 3500;
 
 // DA « système 2001 » : un fond rose pâle uni, une barre rose, du pixel net, du vert pour le reste.
@@ -23,9 +23,6 @@ constexpr int kLeft = 28;
 
 inline uint16_t *cache = nullptr;
 inline bool cached = false;
-
-inline int lerp(int a, int b, float t) { return a + (int)((b - a) * t); }
-inline float clamp01(float v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
 
 inline void sparkle(Canvas &c, int x, int y, int scale, uint16_t color) {
   static const char *const kShape[] = {"....#....", "....#....", "...###...", "..#####..", "#########",
@@ -64,26 +61,6 @@ inline void blocks(Canvas &c, int x, int y, int w, uint32_t ms) {
   const int head = (ms / 120) % (slots + kLit);
   for (int i = head - kLit; i < head; ++i) {
     if (i >= 0 && i < slots) c.fillRect(x + 5 + i * (kBlock + kGap), y + 5, kBlock, kH - 10, kGreen);
-  }
-}
-
-inline void roundRect(Canvas &c, int x, int y, int w, int h, float radius, const uint8_t top[3],
-                      const uint8_t bottom[3], uint8_t opacity = 255) {
-  const float hx = w / 2.0f, hy = h / 2.0f, cx = x + hx, cy = y + hy;
-  for (int py = y - 1; py <= y + h; ++py) {
-    if (py < 0 || py >= c.h) continue;
-    const float t = clamp01((py - y) / (float)h);
-    const uint16_t color = rgb565(lerp(top[0], bottom[0], t), lerp(top[1], bottom[1], t), lerp(top[2], bottom[2], t));
-    for (int px = x - 1; px <= x + w; ++px) {
-      if (px < 0 || px >= c.w) continue;
-      const float qx = fabsf(px + 0.5f - cx) - (hx - radius), qy = fabsf(py + 0.5f - cy) - (hy - radius);
-      const float ox = qx > 0 ? qx : 0, oy = qy > 0 ? qy : 0;
-      const float dist = sqrtf(ox * ox + oy * oy) + fminf(fmaxf(qx, qy), 0) - radius;
-      const float a = clamp01(0.5f - dist);
-      if (a <= 0) continue;
-      uint16_t &p = c.pixels[py * c.w + px];
-      p = blend565(p, color, (uint8_t)(a * opacity));
-    }
   }
 }
 

@@ -65,13 +65,11 @@ class RgbDisplay {
 
   uint16_t *backBuffer() {
     if (pending_) {
-      if (xSemaphoreTake(frameDone_, pdMS_TO_TICKS(60)) != pdTRUE) timeouts++;
+      xSemaphoreTake(frameDone_, pdMS_TO_TICKS(60));
       pending_ = false;
     }
     return fb_[back_];
   }
-
-  const uint16_t *frontBuffer() const { return fb_[back_ ^ 1]; }
 
   void present() {
     backBuffer();
@@ -89,8 +87,6 @@ class RgbDisplay {
   bool pending_ = false;
 
  public:
-  uint32_t timeouts = 0;
-
   static bool IRAM_ATTR onFrameComplete(esp_lcd_panel_handle_t, const esp_lcd_rgb_panel_event_data_t *,
                                         void *ctx) {
     BaseType_t woken = pdFALSE;

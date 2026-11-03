@@ -74,23 +74,6 @@ inline const Glyph *findGlyph(const Font &font, uint16_t code) {
   return nullptr;
 }
 
-inline void fillCircle(Canvas &c, float cx, float cy, float radius, uint16_t color, float inner = 0,
-                       uint8_t opacity = 255) {
-  const int r = (int)radius + 2;
-  for (int y = (int)cy - r; y <= (int)cy + r; ++y) {
-    if (y < 0 || y >= c.h) continue;
-    for (int x = (int)cx - r; x <= (int)cx + r; ++x) {
-      if (x < 0 || x >= c.w) continue;
-      const float d = sqrtf((x - cx) * (x - cx) + (y - cy) * (y - cy));
-      float a = radius + 0.5f - d;
-      if (inner > 0) a = fminf(a, d - inner + 0.5f);
-      if (a <= 0) continue;
-      const uint8_t alpha = (uint8_t)((a >= 1 ? 255 : (int)(a * 255)) * (opacity + 1) >> 8);
-      c.pixels[y * c.w + x] = blend565(c.pixels[y * c.w + x], color, alpha);
-    }
-  }
-}
-
 inline void drawImage(Canvas &c, int x, int y, int w, int h, const uint16_t *color, const uint8_t *alpha,
                       uint8_t opacity = 255) {
   for (int iy = 0; iy < h; ++iy) {

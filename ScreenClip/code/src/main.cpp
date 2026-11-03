@@ -12,17 +12,17 @@
 
 #include "reglages.h"
 #include "capteur.h"
-#include "ecran.h"
 #include "orientation.h"
+#include "bouton.h"
+#include "rendu.h"
 
 #include "batterie.h"
 #include "texte.h"
 #include "cle_usb.h"
-#include "vista.h"
+#include "menus.h"
 #include "telephone.h"
 
 namespace {
-RgbDisplay display;
 AnimatedGIF gif;
 Preferences prefs;
 
@@ -35,28 +35,8 @@ uint32_t nextFrameAt = 0;
 uint8_t *gifCanvas = nullptr;
 uint8_t *gifTurbo = nullptr;
 
-const uint16_t *srcPixels = nullptr;
-int gifSrcW = 1, gifSrcH = 1;
-int gifDstW = 1, gifDstH = 1;
-bool srcCover = true;
-
 constexpr int kUiW = 820, kUiH = 320;
 Canvas ui = {nullptr, kUiW, kUiH};
-
-uint32_t rowMap[PANEL_H];
-uint32_t colMap[PANEL_W];
-
-constexpr int kTileCols = 64;
-uint16_t tile[PANEL_W * kTileCols];
-uint16_t tileRow[PANEL_W];
-uint32_t tileSrcRow[PANEL_W];
-int tileRows = 0;
-
-int rowFirst = 0, rowEnd = PANEL_H, colFirst = 0, colEnd = PANEL_W;
-
-int rotation = SCREEN_ROTATION;
-int screenW() { return (rotation & 1) ? PANEL_H : PANEL_W; }
-int screenH() { return (rotation & 1) ? PANEL_W : PANEL_H; }
 
 uint32_t overlayUntil = 0;
 bool overlayShown = false;
@@ -74,18 +54,18 @@ uint32_t rotateTouchedAt = 0;
 uint16_t *hintPixels = nullptr;
 
 void compositeHint(uint16_t *panel) {
-  const int sh = screenH();
-  for (int oy = 0; oy < vista::kHintH; ++oy) {
-    for (int ox = 0; ox < vista::kHintW; ++ox) {
-      const int sx = 12 + ox, sy = sh - vista::kHintH - 12 + oy;
+  const int sh = rendu::screenH();
+  for (int oy = 0; oy < menus::kHintH; ++oy) {
+    for (int ox = 0; ox < menus::kHintW; ++ox) {
+      const int sx = 12 + ox, sy = sh - menus::kHintH - 12 + oy;
       int px, py;
-      switch (rotation & 3) {
+      switch (rendu::rotation & 3) {
         case 0: px = sx; py = sy; break;
         case 1: px = PANEL_W - 1 - sy; py = sx; break;
         case 2: px = PANEL_W - 1 - sx; py = PANEL_H - 1 - sy; break;
         default: px = sy; py = PANEL_H - 1 - sx; break;
       }
-      if (px >= 0 && px < PANEL_W && py >= 0 && py < PANEL_H) panel[py * PANEL_W + px] = hintPixels[oy * vista::kHintW + ox];
+      if (px >= 0 && px < PANEL_W && py >= 0 && py < PANEL_H) panel[py * PANEL_W + px] = hintPixels[oy * menus::kHintW + ox];
     }
   }
 }
@@ -93,7 +73,7 @@ void compositeHint(uint16_t *panel) {
 void compositeOverlay(uint16_t *panel) {
   if (rotateMode && hintPixels) compositeHint(panel);
   if ((int32_t)(overlayUntil - millis()) <= 0) return;
-  battery::composite(panel, rotation);
+  battery::composite(panel, rendu::rotation);
   overlayShown = true;
 }
 
@@ -110,7 +90,7 @@ bool saverOn = false;
 uint32_t sleptAt = 0;
 uint32_t saverMovedAt = 0;
 bool swallowRelease = false;
-volatile bool motionSeen = false;
+bool motionSeen = false;
 
 orientation::Tracker tracker(ROTATE_MIN_TILT_G, ROTATE_DOMINANCE, ROTATE_HOLD_MS);
 orientation::Motion motion(MOTION_THRESHOLD_G);
@@ -142,60 +122,13 @@ void initBacklight(uint8_t level) {
   ledc_channel_config(&ch);
 }
 
-struct ButtonEvent {
-  bool isLong;
-  uint32_t at;
-};
-QueueHandle_t bootEvents = nullptr;
-volatile bool bootDown = false;
-
-// Un appui long agit dès que le délai est atteint, sans attendre le relâchement.
-void bootButtonTask(void *) {
-  bool pressed = false, longSent = false;
-  uint32_t changedAt = 0, pressedAt = 0;
-  for (;;) {
-    const bool down = digitalRead(PIN_LCD_CS) == LOW;
-    const uint32_t now = millis();
-    if (down != pressed && now - changedAt >= 25) {
-      pressed = down;
-      changedAt = now;
-      bootDown = down;
-      if (down) {
-        pressedAt = now;
-        longSent = false;
-      } else if (!longSent) {
-        const ButtonEvent event = {false, now};
-        xQueueSend(bootEvents, &event, 0);
-      }
-    } else if (pressed && !longSent && now - pressedAt >= LONG_PRESS_MS) {
-      longSent = true;
-      const ButtonEvent event = {true, now};
-      xQueueSend(bootEvents, &event, 0);
-    }
-    vTaskDelay(pdMS_TO_TICKS(4));
-  }
-}
-
-void startBootButton() {
-  pinMode(PIN_LCD_CS, INPUT_PULLUP);
-  bootEvents = xQueueCreate(8, sizeof(ButtonEvent));
-  xTaskCreatePinnedToCore(bootButtonTask, "bouton", 2048, nullptr, 3, nullptr, 0);
-}
-
-void buildMaps();
-void renderFrame();
-
 void showUi() {
-  srcPixels = ui.pixels;
-  gifSrcW = kUiW;
-  gifSrcH = kUiH;
-  srcCover = false;
-  buildMaps();
-  renderFrame();
+  rendu::setSource(ui.pixels, kUiW, kUiH, false);
+  rendu::render();
 }
 
 void showMessage(const char *line1, const char *line2 = nullptr, int32_t spinnerMs = -1) {
-  vista::drawMessage(ui, line1, line2, spinnerMs);
+  menus::drawMessage(ui, line1, line2, spinnerMs);
   showUi();
 }
 
@@ -246,123 +179,6 @@ void *allocFast(size_t size) {
   return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 }
 
-int clampi(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v); }
-
-void buildMaps() {
-  const int sw = screenW();
-  const int sh = screenH();
-  if ((gifSrcW * sh < gifSrcH * sw) == srcCover) {
-    gifDstW = sw;
-    gifDstH = gifSrcH * sw / gifSrcW;
-  } else {
-    gifDstH = sh;
-    gifDstW = gifSrcW * sh / gifSrcH;
-  }
-  const int offX = (sw - gifDstW) / 2;
-  const int offY = (sh - gifDstH) / 2;
-  auto srcX = [&](int sx) { return (uint32_t)clampi((sx - offX) * gifSrcW / gifDstW, 0, gifSrcW - 1); };
-  auto srcY = [&](int sy) { return (uint32_t)clampi((sy - offY) * gifSrcH / gifDstH, 0, gifSrcH - 1) * gifSrcW; };
-
-  for (int py = 0; py < PANEL_H; ++py) {
-    switch (rotation & 3) {
-      case 0: rowMap[py] = srcY(py); break;
-      case 1: rowMap[py] = srcX(py); break;
-      case 2: rowMap[py] = srcY(PANEL_H - 1 - py); break;
-      default: rowMap[py] = srcX(PANEL_H - 1 - py); break;
-    }
-  }
-  for (int px = 0; px < PANEL_W; ++px) {
-    switch (rotation & 3) {
-      case 0: colMap[px] = srcX(px); break;
-      case 1: colMap[px] = srcY(PANEL_W - 1 - px); break;
-      case 2: colMap[px] = srcX(PANEL_W - 1 - px); break;
-      default: colMap[px] = srcY(px); break;
-    }
-  }
-
-  const int x0 = clampi(offX, 0, sw), x1 = clampi(offX + gifDstW, 0, sw);
-  const int y0 = clampi(offY, 0, sh), y1 = clampi(offY + gifDstH, 0, sh);
-  switch (rotation & 3) {
-    case 0: rowFirst = y0; rowEnd = y1; colFirst = x0; colEnd = x1; break;
-    case 1: rowFirst = x0; rowEnd = x1; colFirst = PANEL_W - y1; colEnd = PANEL_W - y0; break;
-    case 2: rowFirst = PANEL_H - y1; rowEnd = PANEL_H - y0; colFirst = PANEL_W - x1; colEnd = PANEL_W - x0; break;
-    default: rowFirst = PANEL_H - x1; rowEnd = PANEL_H - x0; colFirst = y0; colEnd = y1; break;
-  }
-
-  tileRows = 0;
-  for (int px = 0; px < PANEL_W; ++px) {
-    if (px == 0 || colMap[px] != colMap[px - 1]) tileSrcRow[tileRows++] = colMap[px];
-    tileRow[px] = tileRows - 1;
-  }
-}
-
-void renderRotated(const uint16_t *canvas, uint16_t *dst) {
-  int py = 0;
-  while (py < PANEL_H) {
-    uint32_t cmin = rowMap[py], cmax = rowMap[py];
-    int end = py + 1;
-    while (end < PANEL_H) {
-      const uint32_t lo = std::min(cmin, rowMap[end]);
-      const uint32_t hi = std::max(cmax, rowMap[end]);
-      if (hi - lo >= kTileCols) break;
-      cmin = lo;
-      cmax = hi;
-      ++end;
-    }
-    const int ncols = cmax - cmin + 1;
-    for (int r = 0; r < tileRows; ++r) {
-      memcpy(tile + r * kTileCols, canvas + tileSrcRow[r] + cmin, ncols * 2);
-    }
-    for (; py < end; ++py) {
-      uint16_t *d = dst + py * PANEL_W;
-      if (py > 0 && rowMap[py] == rowMap[py - 1]) {
-        memcpy(d, d - PANEL_W, PANEL_W * 2);
-        continue;
-      }
-      const uint16_t *col = tile + (rowMap[py] - cmin);
-      for (int px = 0; px < PANEL_W; ++px) d[px] = col[tileRow[px] * kTileCols];
-    }
-  }
-}
-
-void blackBars(uint16_t *dst) {
-  if (rowFirst > 0) memset(dst, 0, rowFirst * PANEL_W * 2);
-  if (rowEnd < PANEL_H) memset(dst + rowEnd * PANEL_W, 0, (PANEL_H - rowEnd) * PANEL_W * 2);
-  if (colFirst > 0 || colEnd < PANEL_W) {
-    for (int py = rowFirst; py < rowEnd; ++py) {
-      uint16_t *d = dst + py * PANEL_W;
-      memset(d, 0, colFirst * 2);
-      memset(d + colEnd, 0, (PANEL_W - colEnd) * 2);
-    }
-  }
-}
-
-void renderFrame() {
-  if (rotation & 1) {
-    uint16_t *back = display.backBuffer();
-    renderRotated(srcPixels, back);
-    blackBars(back);
-    compositeOverlay(back);
-    display.present();
-    return;
-  }
-  const uint16_t *canvas = srcPixels;
-  uint16_t *dst = display.backBuffer();
-  for (int py = 0; py < PANEL_H; ++py) {
-    uint16_t *d = dst + py * PANEL_W;
-
-    if (py > 0 && rowMap[py] == rowMap[py - 1]) {
-      memcpy(d, d - PANEL_W, PANEL_W * 2);
-      continue;
-    }
-    const uint16_t *src = canvas + rowMap[py];
-    for (int px = 0; px < PANEL_W; ++px) d[px] = src[colMap[px]];
-  }
-  blackBars(dst);
-  compositeOverlay(dst);
-  display.present();
-}
-
 void closeGif() {
   if (gifOpen) gif.close();
   gifOpen = false;
@@ -370,7 +186,7 @@ void closeGif() {
   free(gifCanvas);
   free(gifTurbo);
   gifData = gifCanvas = gifTurbo = nullptr;
-  srcPixels = nullptr;
+  rendu::clearSource();
 }
 
 bool openGif(int index) {
@@ -397,12 +213,11 @@ bool openGif(int index) {
     return false;
   }
   gifOpen = true;
-  gifSrcW = gif.getCanvasWidth();
-  gifSrcH = gif.getCanvasHeight();
+  const int width = gif.getCanvasWidth(), height = gif.getCanvasHeight();
 
-  const size_t canvasBytes = (size_t)gifSrcW * (gifSrcH + 3) * 3;
+  const size_t canvasBytes = (size_t)width * (height + 3) * 3;
 
-  gifTurbo = static_cast<uint8_t *>(allocInternal(TURBO_BUFFER_SIZE + gifSrcW * (gifSrcH + 3)));
+  gifTurbo = static_cast<uint8_t *>(allocInternal(TURBO_BUFFER_SIZE + width * (height + 3)));
   gifCanvas = static_cast<uint8_t *>(allocFast(canvasBytes));
   if (!gifCanvas) {
     closeGif();
@@ -412,9 +227,7 @@ bool openGif(int index) {
   gif.setDrawType(GIF_DRAW_COOKED);
   gif.setFrameBuf(gifCanvas);
   gif.setTurboBuf(gifTurbo);
-  srcPixels = reinterpret_cast<const uint16_t *>(gifCanvas + gifSrcW * gifSrcH);
-  srcCover = true;
-  buildMaps();
+  rendu::setSource(reinterpret_cast<const uint16_t *>(gifCanvas + width * height), width, height, true);
   return true;
 }
 
@@ -475,11 +288,11 @@ void drawPhonePage(int step) {
     const String password = "Mot de passe " + phonePassword;
     const char *const lines[] = {"Vise ce code avec ton", "appareil photo, puis accepte", "le Wi-Fi proposé.", phoneSsid.c_str(), password.c_str()};
     const String code = "WIFI:T:WPA;S:" + phoneSsid + ";P:" + phonePassword + ";;";
-    vista::drawPhone(ui, "Ajoute tes écrans", lines, 5, 3);
+    menus::drawPhone(ui, "Ajoute tes écrans", lines, 5, 3);
     telephone::drawQr(ui, 16, 64, 248, code.c_str());
   } else {
     const char *const lines[] = {"Vise ce nouveau code pour", "ouvrir ta page.", "", "Ou tape dans le navigateur :", "192.168.4.1"};
-    vista::drawPhone(ui, "C'est connecté !", lines, 5, 2);
+    menus::drawPhone(ui, "C'est connecté !", lines, 5, 2);
     telephone::drawQr(ui, 16, 64, 248, telephone::kUrl);
   }
   showUi();
@@ -537,7 +350,7 @@ void showPage(int index, int dir, bool quiet) {
       setFullSpeed(false);
       messagePage = false;
       helpPage = true;
-      vista::drawHelp(ui);
+      menus::drawHelp(ui);
       showUi();
       return;
     }
@@ -609,50 +422,20 @@ void startLibrary() {
   }
 }
 
-void step(int dir);
-void rotateScreen();
-
-void runCommand(const char *line) {
-}
-
-void handleSerial() {
-  static char line[24];
-  static size_t len = 0;
-  while (Serial.available()) {
-    const char ch = Serial.read();
-    if (ch == '\n' || ch == '\r') {
-      line[len] = 0;
-      if (len) runCommand(line);
-      len = 0;
-    } else if (len < sizeof(line) - 1) {
-      line[len++] = ch;
-    }
-  }
-}
-
 void bootScreen() {
   const uint32_t start = millis();
-  while (millis() - start < vista::kBootMs) {
-    vista::drawBoot(ui, millis() - start);
+  while (millis() - start < menus::kBootMs) {
+    menus::drawBoot(ui, millis() - start);
     showUi();
-    handleSerial();
-  }
-}
-
-void applyRotation(int value) {
-  rotation = value & 3;
-  if (srcPixels) {
-    buildMaps();
-    renderFrame();
   }
 }
 
 void rotateScreen() {
-  applyRotation(rotation + 1);
-  prefs.putUChar("rot", rotation);
+  rendu::setRotation(rendu::rotation + 1);
+  prefs.putUChar("rot", rendu::rotation);
   // En rotation auto, le geste corrige la position actuelle et la retient.
   if (autoRotate && currentPosition >= 0) {
-    rotationForPosition[currentPosition] = rotation;
+    rotationForPosition[currentPosition] = rendu::rotation;
     prefs.putBytes("rotmap", rotationForPosition, sizeof(rotationForPosition));
   }
 }
@@ -666,7 +449,7 @@ void drawSettingsPage() {
   const char *const onOff[2] = {"désactivée", "activée"};
   const char *const missing = "capteur introuvable";
   static const char *const slides[kSlideChoices] = {"désactivé", "toutes les 30 s", "toutes les minutes", "toutes les 5 min"};
-  const vista::SettingRow rows[] = {
+  const menus::SettingRow rows[] = {
       {"Rotation auto", capteur::present ? onOff[autoRotate] : missing},
       {"Tourner l'écran", "ouvrir"},
       {"Veille", capteur::present ? onOff[sleepEnabled] : missing},
@@ -674,7 +457,7 @@ void drawSettingsPage() {
       {"Ajouter des écrans", "ouvrir"},
       {"Quitter", ""},
   };
-  vista::drawSettings(ui, rows, kSettingsRows, settingsRow);
+  menus::drawSettings(ui, rows, kSettingsRows, settingsRow);
   showUi();
 }
 
@@ -695,7 +478,7 @@ void closeSettings() {
 
 void leaveRotateMode() {
   rotateMode = false;
-  if (srcPixels) renderFrame();
+  if (rendu::hasSource()) rendu::render();
 }
 
 void changeSetting() {
@@ -711,7 +494,7 @@ void changeSetting() {
       showPage(currentIndex, 1, true);
       rotateMode = true;
       rotateTouchedAt = millis();
-      if (srcPixels) renderFrame();
+      if (rendu::hasSource()) rendu::render();
       break;
     case 2:
       if (!capteur::present) break;
@@ -733,7 +516,7 @@ void changeSetting() {
 }
 
 void drawSaver() {
-  vista::drawSaver(ui, esp_random() % (kUiW - vista::kSaverW), esp_random() % (kUiH - vista::kSaverH));
+  menus::drawSaver(ui, esp_random() % (kUiW - menus::kSaverW), esp_random() % (kUiH - menus::kSaverH));
   showUi();
   saverMovedAt = millis();
 }
@@ -782,23 +565,23 @@ void pollSensors() {
   const int position = tracker.update(ax, ay, millis());
   if (position < 0 || position == currentPosition) return;
   currentPosition = position;
-  if (rotationForPosition[position] != rotation) applyRotation(rotationForPosition[position]);
+  if (rotationForPosition[position] != rendu::rotation) rendu::setRotation(rotationForPosition[position]);
 }
 
 // Le premier appui en veille ne fait que réveiller la barrette.
 bool handleSleep() {
   if (sleeping) {
-    if (!motionSeen && !bootDown && uxQueueMessagesWaiting(bootEvents) == 0) {
+    if (!motionSeen && !bouton::held && uxQueueMessagesWaiting(bouton::events) == 0) {
       updateSaver();
       delay(20);
       return true;
     }
-    swallowRelease = bootDown;
-    xQueueReset(bootEvents);
+    swallowRelease = bouton::held;
+    xQueueReset(bouton::events);
     wakeUp();
     return false;
   }
-  if (sleepEnabled && capteur::present && !settingsPage && !rotateMode && !bootDown &&
+  if (sleepEnabled && capteur::present && !settingsPage && !rotateMode && !bouton::held &&
       millis() - lastActivityAt >= SLEEP_AFTER_S * 1000UL) {
     enterSleep();
     return true;
@@ -817,8 +600,8 @@ void advanceSlideshow() {
 void handleBootButton() {
   static bool pending = false;
   static uint32_t pendingAt = 0;
-  ButtonEvent event;
-  while (xQueueReceive(bootEvents, &event, 0) == pdTRUE) {
+  bouton::Event event;
+  while (xQueueReceive(bouton::events, &event, 0) == pdTRUE) {
     noteActivity();
     if (swallowRelease) {
       swallowRelease = false;
@@ -847,7 +630,7 @@ void handleBootButton() {
   }
 
   // Un appui seul n'agit qu'une fois écarté un éventuel second appui.
-  if (pending && !bootDown && millis() - pendingAt > DOUBLE_CLICK_MS) {
+  if (pending && !bouton::held && millis() - pendingAt > DOUBLE_CLICK_MS) {
     pending = false;
     step(+1);
   }
@@ -907,21 +690,22 @@ void setup() {
   Serial.enableReboot(false);
 
   initBacklight(BACKLIGHT_LEVEL);
-  display.init();
+  rendu::overlay = compositeOverlay;
+  rendu::display.init();
 
-  startBootButton();
+  bouton::start();
 
   ui.pixels = static_cast<uint16_t *>(heap_caps_malloc(kUiW * kUiH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-  hintPixels = static_cast<uint16_t *>(heap_caps_malloc(vista::kHintW * vista::kHintH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  hintPixels = static_cast<uint16_t *>(heap_caps_malloc(menus::kHintW * menus::kHintH * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
   if (hintPixels) {
-    Canvas hint = {hintPixels, vista::kHintW, vista::kHintH};
-    vista::drawRotateHint(hint);
+    Canvas hint = {hintPixels, menus::kHintW, menus::kHintH};
+    menus::drawRotateHint(hint);
   }
 
   gif.begin(GIF_PALETTE_RGB565_LE);
 
   prefs.begin("gifplayer", false);
-  rotation = prefs.getUChar("rot", SCREEN_ROTATION) & 3;
+  rendu::rotation = prefs.getUChar("rot", SCREEN_ROTATION) & 3;
 
   autoRotate = prefs.getBool("autorot", AUTO_ROTATE_DEFAULT);
   sleepEnabled = prefs.getBool("veille", SLEEP_DEFAULT);
@@ -936,14 +720,13 @@ void setup() {
   for (int i = 0; i < 4; ++i) battery::update(true);
   loadLibrary();
 #if BOOT_SCREEN
-  showBatteryOverlay(vista::kBootMs + BATTERY_OVERLAY_MS);
+  showBatteryOverlay(menus::kBootMs + BATTERY_OVERLAY_MS);
   bootScreen();
 #endif
   startLibrary();
 }
 
 void loop() {
-  handleSerial();
   if (handleTransfer()) return;
 
 #if BATTERY_OVERLAY
@@ -952,7 +735,7 @@ void loop() {
 
   if (overlayShown && (int32_t)(overlayUntil - millis()) <= 0) {
     overlayShown = false;
-    if (srcPixels) renderFrame();
+    if (rendu::hasSource()) rendu::render();
   }
 
   pollSensors();
@@ -1003,7 +786,7 @@ void loop() {
       step(+1);
       return;
     }
-    renderFrame();
+    rendu::render();
     if (result == 0) gif.reset();
 
     nextFrameAt += std::max(delayMs, 10);

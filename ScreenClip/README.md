@@ -1,7 +1,5 @@
 # screenclip
 
-![screenclip](screenclip.png)
-
 Une barrette à écran : elle affiche en boucle les GIF d'une carte microSD sur un écran Waveshare ESP32-S3-LCD-3.16 (320 x 820).
 
 ## Installer
@@ -51,7 +49,18 @@ Pour ajouter des GIF, branche la barrette à un ordinateur : elle apparaît comm
 
 ## Modifier
 
-Le code est dans `code/` (projet PlatformIO). Le site du téléphone est dans `code/web/` : après un changement, lance `python3 code/outils/make_web.py`. Les réglages sont dans `code/include/reglages.h` : orientation, luminosité, durées. Relance ensuite le fichier d'installation.
+Le code est dans `code/` (projet PlatformIO). 
+
+| Dossier ou fichier | Contenu |
+|---|---|
+| `code/src/main.cpp` | Carrousel, réglages, veille et boucle principale |
+| `code/include/` | Écran, rendu, menus, bouton, capteur, Wi-Fi et clé USB |
+| `code/web/` | Site du téléphone. Après un changement, lance `python3 code/outils/make_web.py`. |
+| `code/outils/` | Génération des polices, du logo et du site, script de flash |
+| `code/tests/` | Tests de la logique de rotation, à lancer sur ordinateur (commande en tête du fichier) |
+
+`fonts_data.h`, `logo_image.h` et `page_web.h` sont générés : ne les modifie pas à la main.
+ Les réglages sont dans `code/include/reglages.h`. Relance ensuite le fichier d'installation.
 
 ## Licence
 
