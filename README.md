@@ -35,7 +35,7 @@ Ouvre les réglages (appui long), choisis « Ajouter des écrans », puis suis c
 
 1. Scanne le premier QR code avec l'appareil photo et accepte le Wi-Fi proposé.
 2. Scanne le second QR code : ton navigateur ouvre la page « Mes écrans ».
-3. Ajoute une photo, une vidéo ou un texte, ou supprime un écran.
+3. Ajoute une photo, une vidéo ou un texte, change l'ordre des écrans ou supprimes-en.
 
 Rien à installer et pas besoin d'internet. Le Wi-Fi ne reste allumé que sur cette page. Un appui la ferme, et elle se ferme seule après 10 minutes sans téléphone connecté.
 

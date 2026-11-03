@@ -26,6 +26,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,label:focus-with
 #list{display:flex;flex-direction:column;gap:14px}
 .item{position:relative}
 .del{position:absolute;right:8px;top:8px;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:15px;font-weight:600}
+.move{position:absolute;left:8px;top:8px;display:flex;gap:6px}
+.move button{width:44px;height:40px;border-radius:20px;background:rgba(0,0,0,.72);color:#fff;font-size:18px;font-weight:600}
+.move button:disabled{opacity:.35}
 .empty{text-align:center;padding:36px 16px;border:2px dashed var(--line);border-radius:20px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .bar>div{max-width:488px;margin:0 auto;display:flex;gap:10px}
@@ -119,6 +122,10 @@ const api={
   if(DEMO){demoItems.splice(demoItems.findIndex(d=>d.chemin===chemin),1);return}
   const r=await fetch('/api/supprimer?chemin='+encodeURIComponent(chemin),{method:'POST'});if(!r.ok)throw 0;
  },
+ async order(paths){
+  if(DEMO){demoItems.sort((a,b)=>paths.indexOf(a.chemin)-paths.indexOf(b.chemin));return}
+  const r=await fetch('/api/ordre',{method:'POST',headers:{'Content-Type':'text/plain'},body:paths.join('\n')});if(!r.ok)throw 0;
+ },
  upload(blob,onp){
   if(DEMO){demoItems.push({chemin:'demo'+Date.now(),url:URL.createObjectURL(blob)});return new Promise(ok=>{let p=0;const t=setInterval(()=>{p+=.2;onp(p);if(p>=1){clearInterval(t);ok()}},60)})}
   return new Promise((ok,ko)=>{const x=new XMLHttpRequest(),f=new FormData();f.append('fichier',blob,'ecran.gif');
@@ -147,9 +154,17 @@ async function refresh(){
  const imgs=items.map(it=>{const w=document.createElement('div');w.className='item';
   const c=document.createElement('div');c.className='clip';const i=document.createElement('img');i.alt='Écran';c.append(i);
   const b=document.createElement('button');b.className='del';b.textContent='Supprimer';b.onclick=()=>askDelete(it.chemin);
-  w.append(c,b);box.append(w);return [i,it.url]});
+  const m=document.createElement('div');m.className='move';
+  [[-1,'↑','Monter cet écran'],[1,'↓','Descendre cet écran']].forEach(([dir,t,label])=>{const a=document.createElement('button');a.textContent=t;a.setAttribute('aria-label',label);a.onclick=()=>move(w,dir);m.append(a)});
+  w.dataset.chemin=it.chemin;w.append(c,m,b);box.append(w);return [i,it.url]});
+ syncMoves();
  for(const [i,u] of imgs)await new Promise(ok=>{i.onload=i.onerror=ok;i.src=u});
 }
+function syncMoves(){const all=[...$('list').children];all.forEach((w,i)=>{const b=w.querySelectorAll('.move button');b[0].disabled=i===0;b[1].disabled=i===all.length-1})}
+async function move(w,dir){const box=$('list');
+ if(dir<0)box.insertBefore(w,w.previousElementSibling);else box.insertBefore(w.nextElementSibling,w);
+ syncMoves();
+ try{await api.order([...box.children].map(x=>x.dataset.chemin))}catch(e){toast(OFFLINE);refresh()}}
 let toDelete=null;
 function askDelete(c){toDelete=c;$('ask').hidden=false}
 $('askNo').onclick=()=>$('ask').hidden=true;

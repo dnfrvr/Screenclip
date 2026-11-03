@@ -7,6 +7,7 @@
 #define SCREEN_ROTATION 1
 
 #define GIF_FOLDER "/gifs"
+#define ORDER_FILE GIF_FOLDER "/.ordre.txt"
 
 #define GIF_MAX_BYTES (6 * 1024 * 1024)
 

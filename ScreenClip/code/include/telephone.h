@@ -127,6 +127,27 @@ inline void finishUpload() {
   server.send(200, "text/plain", "ok");
 }
 
+inline void saveOrder() {
+  const String body = server.arg("plain");
+  for (int start = 0; start < (int)body.length();) {
+    int end = body.indexOf('\n', start);
+    if (end < 0) end = body.length();
+    if (!known(body.substring(start, end))) return server.send(400, "text/plain", "liste inconnue");
+    start = end + 1;
+  }
+  const String tmp = String(ORDER_FILE) + ".tmp";
+  File f = SD_MMC.open(tmp, FILE_WRITE);
+  if (!f || f.print(body) != body.length()) {
+    if (f) f.close();
+    return server.send(500, "text/plain", "écriture impossible");
+  }
+  f.close();
+  SD_MMC.remove(ORDER_FILE);
+  if (!SD_MMC.rename(tmp, ORDER_FILE)) return server.send(500, "text/plain", "écriture impossible");
+  onChanged();
+  server.send(200, "text/plain", "ok");
+}
+
 // Les téléphones vérifient l'accès à internet : on répond « tout va bien » pour
 // qu'ils restent sur ce Wi-Fi et que le site s'ouvre dans le vrai navigateur.
 inline void answerOther() {
@@ -150,6 +171,7 @@ inline void addRoutes() {
   server.on("/api/ecrans", HTTP_GET, sendList);
   server.on("/api/fichier", HTTP_GET, sendFile);
   server.on("/api/supprimer", HTTP_POST, removeFile);
+  server.on("/api/ordre", HTTP_POST, saveOrder);
   server.on("/api/ecrans", HTTP_POST, finishUpload, receiveUpload);
   server.onNotFound(answerOther);
 }

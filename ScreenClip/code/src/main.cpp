@@ -13,6 +13,7 @@
 #include "reglages.h"
 #include "capteur.h"
 #include "orientation.h"
+#include "ordre.h"
 #include "bouton.h"
 #include "rendu.h"
 
@@ -161,12 +162,25 @@ bool mountSd() {
   return SD_MMC.begin("/sdcard", true);
 }
 
+std::vector<String> readOrder() {
+  std::vector<String> paths;
+  File f = SD_MMC.open(ORDER_FILE);
+  while (f && f.available()) {
+    String line = f.readStringUntil('\n');
+    line.trim();
+    if (line.length()) paths.push_back(line);
+  }
+  if (f) f.close();
+  return paths;
+}
+
 void loadGifList() {
   gifFiles.clear();
   scanFolder(GIF_FOLDER);
   if (gifFiles.empty()) scanFolder("/");
   std::sort(gifFiles.begin(), gifFiles.end(),
             [](const String &a, const String &b) { return a.compareTo(b) < 0; });
+  applyOrder(gifFiles, readOrder());
 }
 
 void *allocInternal(size_t size) {
@@ -256,7 +270,7 @@ void setFullSpeed(bool full) {
 void showPage(int index, int dir, bool quiet = false);
 
 void showNoGifMessage() {
-  if (!sdMounted) showMessage("Pas de carte SD", "Insère une carte microSD");
+  if (!sdMounted) showMessage("Carte SD introuvable", "Vérifie qu'elle est bien insérée et formatée en FAT32");
   else showMessage("Aucun écran", "Appuie 1 seconde sur BOOT pour accéder aux réglages");
 }
 
@@ -407,6 +421,7 @@ void loadLibrary() {
   sdMounted = mountSd();
   gifFiles.clear();
   if (!sdMounted) return;
+  SD_MMC.mkdir(GIF_FOLDER);
   loadGifList();
 #if USB_DRIVE
   if (!usbdrive::ready) usbdrive::begin();
@@ -507,7 +522,8 @@ void changeSetting() {
       break;
     case 4:
       settingsPage = false;
-      openPhone();
+      if (sdMounted) openPhone();
+      else showPage(currentIndex, 1, true);
       break;
     default:
       closeSettings();
